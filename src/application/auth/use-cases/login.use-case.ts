@@ -8,9 +8,6 @@ import type { IUserRepository } from '@domain/user/ports/user.repository.port.js
 import type { ILogger } from '@domain/ports/logger.port.js';
 import type { LoginCommand, LoginResult } from '@application/auth/dto/login-auth.dto.js';
 
-const DUMMY_HASH = '$2b$10$dummyhashfordummyusertopreventtimingattackslol1234567890';
-const REFRESH_TOKEN_TTL_DAYS = 30;
-
 export class LoginUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
@@ -18,6 +15,8 @@ export class LoginUseCase {
     private readonly tokenSigner: ITokenSigner,
     private readonly passwordHasher: IPasswordHasher,
     private readonly logger: ILogger,
+    private readonly refreshTokenTtlDays: number,
+    private readonly dummyHash: string,
   ) {}
 
   async execute(command: LoginCommand): Promise<LoginResult> {
@@ -25,7 +24,7 @@ export class LoginUseCase {
 
     if (user === null) {
       // Timing attack prevention: always run a bcrypt compare even for unknown users
-      await this.passwordHasher.compare(command.password, DUMMY_HASH);
+      await this.passwordHasher.compare(command.password, this.dummyHash);
       throw new InvalidCredentialsError();
     }
 
@@ -38,7 +37,7 @@ export class LoginUseCase {
     const hashedToken = await this.passwordHasher.hash(plaintextToken);
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
+    expiresAt.setDate(expiresAt.getDate() + this.refreshTokenTtlDays);
 
     const refreshToken = RefreshToken.create(plaintextToken, user.id, hashedToken, expiresAt);
     await this.refreshTokenRepository.save(refreshToken);

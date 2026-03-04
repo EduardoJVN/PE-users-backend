@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { reportBootstrap } from '@infra/config/bootstrap-reporter.js';
 import { ENV } from '@infra/config/env.config.js';
 import { Logger } from '@infra/adapters/pino-logger.adapter.js';
@@ -26,12 +27,17 @@ async function bootstrap() {
     ENV.JWT_PUBLIC_KEY.replace(/\\n/g, '\n'),
   );
 
+  // Pre-generate a real bcrypt hash at startup for timing attack prevention in LoginUseCase
+  const dummyHash = await passwordHasher.hash(randomUUID());
+
   const loginUseCase = new LoginUseCase(
     userRepo,
     refreshTokenRepo,
     tokenSigner,
     passwordHasher,
     logger,
+    ENV.REFRESH_TOKEN_TTL_DAYS,
+    dummyHash,
   );
   const refreshTokenUseCase = new RefreshTokenUseCase(
     refreshTokenRepo,
@@ -39,6 +45,7 @@ async function bootstrap() {
     tokenSigner,
     passwordHasher,
     logger,
+    ENV.REFRESH_TOKEN_TTL_DAYS,
   );
   const logoutUseCase = new LogoutUseCase(refreshTokenRepo, tokenBlacklist, logger);
 

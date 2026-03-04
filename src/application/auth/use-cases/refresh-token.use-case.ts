@@ -9,8 +9,6 @@ import type { IUserRepository } from '@domain/user/ports/user.repository.port.js
 import type { ILogger } from '@domain/ports/logger.port.js';
 import type { RefreshTokenCommand, RefreshTokenResult } from '@application/auth/dto/refresh-token-auth.dto.js';
 
-const REFRESH_TOKEN_TTL_DAYS = 30;
-
 export class RefreshTokenUseCase {
   constructor(
     private readonly refreshTokenRepository: IRefreshTokenRepository,
@@ -18,6 +16,7 @@ export class RefreshTokenUseCase {
     private readonly tokenSigner: ITokenSigner,
     private readonly passwordHasher: IPasswordHasher,
     private readonly logger: ILogger,
+    private readonly refreshTokenTtlDays: number,
   ) {}
 
   async execute(command: RefreshTokenCommand): Promise<RefreshTokenResult> {
@@ -52,7 +51,7 @@ export class RefreshTokenUseCase {
     const newHashedToken = await this.passwordHasher.hash(newPlaintextToken);
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
+    expiresAt.setDate(expiresAt.getDate() + this.refreshTokenTtlDays);
 
     const newRefreshToken = RefreshToken.create(newPlaintextToken, existingToken.userId, newHashedToken, expiresAt);
     await this.refreshTokenRepository.save(newRefreshToken);

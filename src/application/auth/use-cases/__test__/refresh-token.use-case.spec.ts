@@ -159,6 +159,7 @@ describe('RefreshTokenUseCase', () => {
       tokenSigner,
       passwordHasher,
       logger,
+      30,
     );
   });
 

@@ -122,7 +122,7 @@ describe('LoginUseCase', () => {
     tokenSigner = new MockTokenSigner();
     passwordHasher = new MockPasswordHasher();
     logger = new MockLogger();
-    useCase = new LoginUseCase(userRepo, refreshTokenRepo, tokenSigner, passwordHasher, logger);
+    useCase = new LoginUseCase(userRepo, refreshTokenRepo, tokenSigner, passwordHasher, logger, 30, 'dummy-hash');
   });
 
   it('returns accessToken and refreshToken on valid credentials', async () => {

@@ -21,7 +21,10 @@ async function bootstrap() {
   const refreshTokenRepo = new InMemoryRefreshTokenAdapter();
   const tokenBlacklist = new InMemoryTokenBlacklistAdapter();
   const passwordHasher = new BcryptPasswordHasherAdapter();
-  const tokenSigner = new JwtTokenSignerAdapter(ENV.JWT_PRIVATE_KEY, ENV.JWT_PUBLIC_KEY);
+  const tokenSigner = new JwtTokenSignerAdapter(
+    ENV.JWT_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    ENV.JWT_PUBLIC_KEY.replace(/\\n/g, '\n'),
+  );
 
   const loginUseCase = new LoginUseCase(
     userRepo,

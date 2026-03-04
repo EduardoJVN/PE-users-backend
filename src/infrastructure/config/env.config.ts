@@ -13,6 +13,7 @@ const EnvSchema = z.object({
   JWT_PRIVATE_KEY: isTest ? z.string().default('') : z.string().min(1),
   JWT_PUBLIC_KEY: isTest ? z.string().default('') : z.string().min(1),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  HOST: z.string().default('localhost'),
 });
 
 const result = EnvSchema.safeParse(process.env);
@@ -27,6 +28,7 @@ export const ENV = {
   APP_NAME: pkg.name ?? 'api-service',
   NODE_ENV: result.data.NODE_ENV,
   PORT: result.data.PORT,
+  HOST: result.data.HOST,
   JWT_PRIVATE_KEY: result.data.JWT_PRIVATE_KEY,
   JWT_PUBLIC_KEY: result.data.JWT_PUBLIC_KEY,
   REFRESH_TOKEN_TTL_DAYS: result.data.REFRESH_TOKEN_TTL_DAYS,

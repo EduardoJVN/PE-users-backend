@@ -11,13 +11,12 @@ import { LoginUseCase } from '@application/auth/use-cases/login.use-case.js';
 import { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case.js';
 import { LogoutUseCase } from '@application/auth/use-cases/logout.use-case.js';
 import { AuthController } from '@infra/entry-points/auth.controller.js';
-import { User } from '@domain/user/entities/user.entity.js';
+import { createServer } from '@infra/entry-points/server.js';
 
 async function bootstrap() {
   const logger = new Logger();
-  reportBootstrap(logger);
 
-  // --- Auth module ---
+  // --- Adapters ---
   const userRepo = new InMemoryUserAdapter();
   const refreshTokenRepo = new InMemoryRefreshTokenAdapter();
   const tokenBlacklist = new InMemoryTokenBlacklistAdapter();
@@ -27,7 +26,7 @@ async function bootstrap() {
     ENV.JWT_PUBLIC_KEY.replace(/\\n/g, '\n'),
   );
 
-  // Pre-generate a real bcrypt hash at startup for timing attack prevention in LoginUseCase
+  // --- Use cases ---
   const dummyHash = await passwordHasher.hash(randomUUID());
 
   const loginUseCase = new LoginUseCase(
@@ -49,29 +48,15 @@ async function bootstrap() {
   );
   const logoutUseCase = new LogoutUseCase(refreshTokenRepo, tokenBlacklist, logger);
 
+  // --- Controllers ---
   const authController = new AuthController(loginUseCase, refreshTokenUseCase, logoutUseCase);
 
-  // Demo user — remove before production
-  const demoHash = await passwordHasher.hash('password123');
-  const demoUser = User.create('user-001', 'demo@example.com', demoHash);
-  await userRepo.save(demoUser);
+  // --- Server ---
+  const app = createServer(authController);
 
-  // Auth demo
-  logger.info('--- AUTH: LOGIN ---');
-  const loginRes = await authController.login({
-    body: { email: 'demo@example.com', password: 'password123' },
+  app.listen(ENV.PORT, () => {
+    reportBootstrap(logger);
   });
-  logger.info('Login response', { status: loginRes.status });
-
-  logger.info('--- AUTH: LOGIN (invalid credentials) ---');
-  const badLogin = await authController.login({
-    body: { email: 'demo@example.com', password: 'wrongpassword' },
-  });
-  logger.info('Bad login response', { status: badLogin.status, body: badLogin.body });
-
-  logger.info('--- AUTH: LOGOUT ---');
-  const logoutRes = await authController.logout({ body: { refreshToken: 'nonexistent-token' } });
-  logger.info('Logout response (idempotent)', { status: logoutRes.status });
 }
 
 bootstrap();

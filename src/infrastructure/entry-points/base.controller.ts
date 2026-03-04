@@ -5,11 +5,23 @@ export interface HttpRequest {
   body?: unknown;
   params?: Record<string, string>;
   query?: Record<string, string>;
+  cookies?: Record<string, string>;
+  headers?: Record<string, string>;
+}
+
+export interface ResponseCookie {
+  name: string;
+  value: string;
+  httpOnly: boolean;
+  maxAge?: number;
+  sameSite?: 'Strict' | 'Lax' | 'None';
+  secure?: boolean;
 }
 
 export interface HttpResponse {
   status: number;
   body: unknown;
+  cookies?: ResponseCookie[];
 }
 
 export interface ErrorResponse {

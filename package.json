@@ -15,7 +15,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate": "npx prisma migrate dev",
+    "db:generate": "npx prisma generate",
+    "db:reset": "npx prisma migrate reset --force",
+    "db:studio": "npx prisma studio"
   },
   "lint-staged": {
     "src/**/*.{ts,js}": [

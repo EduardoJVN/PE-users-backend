@@ -671,3 +671,33 @@ describe('PlaceOrderUseCase', () => {
 - **esbuild:** Custom `scripts/build.js` handles path alias resolution for production bundle
 - **Pre-commit hook:** Runs ESLint fix + Prettier + tests on staged `.ts` files automatically
 - **Logger:** Always inject `ILogger` via constructor — never import Pino directly in domain/application layers
+
+### Prisma v7 (breaking vs v5/v6)
+
+`url` y `directUrl` ya **no van en `schema.prisma`**. En Prisma v7 la configuración de URLs se separa en dos lugares:
+
+| Archivo | Propósito |
+|---------|-----------|
+| `prisma.config.ts` (raíz) | `DIRECT_URL` para `prisma migrate` — bypasa PgBouncer |
+| `src/infrastructure/config/prisma.ts` | `DATABASE_URL` pooled para runtime via `PrismaPg` adapter |
+
+`prisma/schema.prisma` solo tiene `generator` + `datasource db { provider = "postgresql" }` — sin URLs.
+
+Packages requeridos: `@prisma/client`, `prisma` (dev), `@prisma/adapter-pg`, `pg`, `@types/pg`.
+
+```typescript
+// prisma.config.ts
+import { defineConfig } from 'prisma/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+export default defineConfig({
+  migrate: { async adapter(env) { return new PrismaPg({ connectionString: env['DIRECT_URL'] as string }); } },
+});
+
+// src/infrastructure/config/prisma.ts
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { ENV } from '@infra/config/env.config.js';
+export const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: ENV.DATABASE_URL }) });
+```
+
+El skill `prisma-expert` documenta Prisma v5 — verificar siempre contra esta sección antes de escribir configuración.

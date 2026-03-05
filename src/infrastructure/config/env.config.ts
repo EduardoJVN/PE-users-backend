@@ -15,6 +15,8 @@ const EnvSchema = z.object({
   JWT_PUBLIC_KEY: isTest ? z.string().default('') : z.string().min(1),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   HOST: z.string().default('localhost'),
+  DATABASE_URL: isTest ? z.string().default('') : z.string().min(1),
+  DIRECT_URL: isTest ? z.string().default('') : z.string().min(1),
 });
 
 const result = EnvSchema.safeParse(process.env);
@@ -33,4 +35,6 @@ export const ENV = {
   JWT_PRIVATE_KEY: result.data.JWT_PRIVATE_KEY,
   JWT_PUBLIC_KEY: result.data.JWT_PUBLIC_KEY,
   REFRESH_TOKEN_TTL_DAYS: result.data.REFRESH_TOKEN_TTL_DAYS,
+  DATABASE_URL: result.data.DATABASE_URL,
+  DIRECT_URL: result.data.DIRECT_URL,
 };

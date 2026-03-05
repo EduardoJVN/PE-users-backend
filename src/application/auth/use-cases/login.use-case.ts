@@ -1,4 +1,5 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import { uuidv7 } from 'uuidv7';
 import { RefreshToken } from '@domain/auth/entities/refresh-token.entity.js';
 import { InvalidCredentialsError } from '@domain/auth/errors/invalid-credentials.error.js';
 import type { IRefreshTokenRepository } from '@domain/auth/ports/refresh-token.repository.port.js';
@@ -33,13 +34,14 @@ export class LoginUseCase {
       throw new InvalidCredentialsError();
     }
 
+    const tokenId = uuidv7();
     const plaintextToken = randomUUID();
-    const hashedToken = await this.passwordHasher.hash(plaintextToken);
+    const tokenHash = createHash('sha256').update(plaintextToken).digest('hex');
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + this.refreshTokenTtlDays);
 
-    const refreshToken = RefreshToken.create(plaintextToken, user.id, hashedToken, expiresAt);
+    const refreshToken = RefreshToken.create(tokenId, user.id, tokenHash, expiresAt);
     await this.refreshTokenRepository.save(refreshToken);
 
     const accessToken = this.tokenSigner.sign({ sub: user.id, email: user.email }, '15m');

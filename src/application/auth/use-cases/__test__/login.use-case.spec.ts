@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createHash } from 'node:crypto';
 import { LoginUseCase } from '../login.use-case.js';
 import type { IUserRepository } from '@domain/user/ports/user.repository.port.js';
 import type { IRefreshTokenRepository } from '@domain/auth/ports/refresh-token.repository.port.js';
@@ -53,6 +54,10 @@ class MockRefreshTokenRepository implements IRefreshTokenRepository {
 
   async findById(id: string): Promise<RefreshToken | null> {
     return this.saved.find((t) => t.id === id) ?? null;
+  }
+
+  async findByTokenHash(hash: string): Promise<RefreshToken | null> {
+    return this.saved.find((t) => t.tokenHash === hash) ?? null;
   }
 
   async findByUserId(userId: string): Promise<RefreshToken[]> {
@@ -148,14 +153,16 @@ describe('LoginUseCase', () => {
     expect(refreshTokenRepo.saved[0].userId).toBe('user-1');
   });
 
-  it('stores RefreshToken with entity.id equal to the returned plaintext token (lookup key must match)', async () => {
+  it('stores RefreshToken with tokenHash equal to sha256 of the returned plaintext token', async () => {
     const user = makeUser();
     userRepo.seed(user);
     passwordHasher.compare.mockResolvedValue(true);
 
     const result = await useCase.execute({ email: 'test@example.com', password: 'correct-password' });
 
-    expect(refreshTokenRepo.saved[0].id).toBe(result.refreshToken);
+    const expectedHash = createHash('sha256').update(result.refreshToken).digest('hex');
+    expect(refreshTokenRepo.saved[0].tokenHash).toBe(expectedHash);
+    expect(refreshTokenRepo.saved[0].id).not.toBe(result.refreshToken);
   });
 
   it('signs access token with user id and email', async () => {

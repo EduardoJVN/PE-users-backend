@@ -42,7 +42,6 @@ async function bootstrap() {
     refreshTokenRepo,
     userRepo,
     tokenSigner,
-    passwordHasher,
     logger,
     ENV.REFRESH_TOKEN_TTL_DAYS,
   );

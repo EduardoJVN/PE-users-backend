@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createHash } from 'node:crypto';
 import { RefreshTokenUseCase } from '../refresh-token.use-case.js';
 import type { IRefreshTokenRepository } from '@domain/auth/ports/refresh-token.repository.port.js';
 import type { IUserRepository } from '@domain/user/ports/user.repository.port.js';
 import type { ITokenSigner, TokenPayload } from '@domain/auth/ports/token-signer.port.js';
-import type { IPasswordHasher } from '@domain/auth/ports/password-hasher.port.js';
 import type { ILogger } from '@domain/ports/logger.port.js';
+
+const sha256 = (s: string): string => createHash('sha256').update(s).digest('hex');
 import { RefreshToken } from '@domain/auth/entities/refresh-token.entity.js';
 import { User } from '@domain/user/entities/user.entity.js';
 import { RefreshTokenInvalidError } from '@domain/auth/errors/refresh-token-invalid.error.js';
@@ -23,6 +25,10 @@ class MockRefreshTokenRepository implements IRefreshTokenRepository {
 
   async findById(id: string): Promise<RefreshToken | null> {
     return this.store.find((t) => t.id === id) ?? null;
+  }
+
+  async findByTokenHash(hash: string): Promise<RefreshToken | null> {
+    return this.store.find((t) => t.tokenHash === hash) ?? null;
   }
 
   async findByUserId(userId: string): Promise<RefreshToken[]> {
@@ -95,11 +101,6 @@ class MockTokenSigner implements ITokenSigner {
   verify = vi.fn((_token: string): TokenPayload => ({ sub: 'user-1', email: 'test@example.com' }));
 }
 
-class MockPasswordHasher implements IPasswordHasher {
-  hash = vi.fn(async (plain: string): Promise<string> => `hashed:${plain}`);
-  compare = vi.fn(async (_plain: string, _hash: string): Promise<boolean> => true);
-}
-
 class MockLogger implements ILogger {
   info = vi.fn();
   error = vi.fn();
@@ -121,16 +122,17 @@ function makePastDate(daysAgo = 1): Date {
   return d;
 }
 
-function makeValidToken(id = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(id, userId, 'hashed:some-uuid', makeFutureDate(), null, new Date('2024-01-01'));
+// plaintextToken is the cookie value; id is the UUID v7 PK (separate)
+function makeValidToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
+  return RefreshToken.reconstitute(`id-of-${plaintextToken}`, userId, sha256(plaintextToken), makeFutureDate(), null, new Date('2024-01-01'));
 }
 
-function makeExpiredToken(id = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(id, userId, 'hashed:some-uuid', makePastDate(), null, new Date('2024-01-01'));
+function makeExpiredToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
+  return RefreshToken.reconstitute(`id-of-${plaintextToken}`, userId, sha256(plaintextToken), makePastDate(), null, new Date('2024-01-01'));
 }
 
-function makeUsedToken(id = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(id, userId, 'hashed:some-uuid', makeFutureDate(), new Date('2024-01-02'), new Date('2024-01-01'));
+function makeUsedToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
+  return RefreshToken.reconstitute(`id-of-${plaintextToken}`, userId, sha256(plaintextToken), makeFutureDate(), new Date('2024-01-02'), new Date('2024-01-01'));
 }
 
 function makeUser(id = 'user-1', email = 'test@example.com'): User {
@@ -144,20 +146,17 @@ describe('RefreshTokenUseCase', () => {
   let refreshTokenRepo: MockRefreshTokenRepository;
   let userRepo: MockUserRepository;
   let tokenSigner: MockTokenSigner;
-  let passwordHasher: MockPasswordHasher;
   let logger: MockLogger;
 
   beforeEach(() => {
     refreshTokenRepo = new MockRefreshTokenRepository();
     userRepo = new MockUserRepository();
     tokenSigner = new MockTokenSigner();
-    passwordHasher = new MockPasswordHasher();
     logger = new MockLogger();
     useCase = new RefreshTokenUseCase(
       refreshTokenRepo,
       userRepo,
       tokenSigner,
-      passwordHasher,
       logger,
       30,
     );
@@ -185,12 +184,12 @@ describe('RefreshTokenUseCase', () => {
     // The store started with 1 token. After refresh: the old one is updated (marked used),
     // and a new one is saved — so the total stored is 2 (old still there but marked used + new).
     const allTokens = await refreshTokenRepo.findAll();
-    const newTokens = allTokens.filter((t) => t.id !== 'token-1');
+    const newTokens = allTokens.filter((t) => t.id !== 'id-of-token-1');
     expect(newTokens).toHaveLength(1);
     expect(newTokens[0].userId).toBe('user-1');
   });
 
-  it('stores new RefreshToken with entity.id equal to the returned plaintext token (lookup key must match)', async () => {
+  it('stores new RefreshToken with tokenHash equal to sha256 of the returned plaintext token', async () => {
     const token = makeValidToken();
     refreshTokenRepo.seed(token);
     userRepo.seed(makeUser());
@@ -198,9 +197,10 @@ describe('RefreshTokenUseCase', () => {
     const result = await useCase.execute({ refreshToken: 'token-1' });
 
     const allTokens = await refreshTokenRepo.findAll();
-    const newToken = allTokens.find((t) => t.id !== 'token-1');
+    const newToken = allTokens.find((t) => t.id !== 'id-of-token-1');
     expect(newToken).toBeDefined();
-    expect(newToken!.id).toBe(result.refreshToken);
+    expect(newToken!.tokenHash).toBe(sha256(result.refreshToken));
+    expect(newToken!.id).not.toBe(result.refreshToken);
   });
 
   it('marks the old token as used before saving the new token', async () => {
@@ -283,8 +283,8 @@ describe('RefreshTokenUseCase', () => {
     expect(logger.info).toHaveBeenCalledWith('Token refreshed', { userId: 'user-1' });
   });
 
-  it('propagates error when IRefreshTokenRepository.findById throws', async () => {
-    vi.spyOn(refreshTokenRepo, 'findById').mockRejectedValue(new Error('DB error'));
+  it('propagates error when IRefreshTokenRepository.findByTokenHash throws', async () => {
+    vi.spyOn(refreshTokenRepo, 'findByTokenHash').mockRejectedValue(new Error('DB error'));
 
     await expect(useCase.execute({ refreshToken: 'token-1' })).rejects.toThrow('DB error');
   });

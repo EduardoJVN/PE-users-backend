@@ -45,6 +45,22 @@ describe('InMemoryRefreshTokenAdapter', () => {
     });
   });
 
+  describe('findByTokenHash', () => {
+    it('returns the token matching the hash', async () => {
+      const token = makeToken('t-1', 'u-1');
+      await adapter.save(token);
+
+      const found = await adapter.findByTokenHash('hashed-token');
+      expect(found).not.toBeNull();
+      expect(found!.id).toBe('t-1');
+    });
+
+    it('returns null when no token matches the hash', async () => {
+      const found = await adapter.findByTokenHash('nonexistent-hash');
+      expect(found).toBeNull();
+    });
+  });
+
   describe('findByUserId', () => {
     it('returns all tokens for a given user', async () => {
       await adapter.save(makeToken('t-1', 'u-1'));

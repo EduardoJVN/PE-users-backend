@@ -12,6 +12,13 @@ export class InMemoryRefreshTokenAdapter implements IRefreshTokenRepository {
     return this.store.get(id) ?? null;
   }
 
+  async findByTokenHash(hash: string): Promise<RefreshToken | null> {
+    for (const token of this.store.values()) {
+      if (token.tokenHash === hash) return token;
+    }
+    return null;
+  }
+
   async findByUserId(userId: string): Promise<RefreshToken[]> {
     const result: RefreshToken[] = [];
     for (const token of this.store.values()) {

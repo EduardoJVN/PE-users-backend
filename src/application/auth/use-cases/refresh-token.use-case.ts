@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import { uuidv7 } from 'uuidv7';
 import { RefreshToken } from '@domain/auth/entities/refresh-token.entity.js';
 import { RefreshTokenExpiredError } from '@domain/auth/errors/refresh-token-expired.error.js';
 import { RefreshTokenInvalidError } from '@domain/auth/errors/refresh-token-invalid.error.js';
 import type { IRefreshTokenRepository } from '@domain/auth/ports/refresh-token.repository.port.js';
-import type { IPasswordHasher } from '@domain/auth/ports/password-hasher.port.js';
 import type { ITokenSigner } from '@domain/auth/ports/token-signer.port.js';
 import type { IUserRepository } from '@domain/user/ports/user.repository.port.js';
 import type { ILogger } from '@domain/ports/logger.port.js';
@@ -14,13 +14,13 @@ export class RefreshTokenUseCase {
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly userRepository: IUserRepository,
     private readonly tokenSigner: ITokenSigner,
-    private readonly passwordHasher: IPasswordHasher,
     private readonly logger: ILogger,
     private readonly refreshTokenTtlDays: number,
   ) {}
 
   async execute(command: RefreshTokenCommand): Promise<RefreshTokenResult> {
-    const existingToken = await this.refreshTokenRepository.findById(command.refreshToken);
+    const incomingHash = createHash('sha256').update(command.refreshToken).digest('hex');
+    const existingToken = await this.refreshTokenRepository.findByTokenHash(incomingHash);
 
     if (existingToken === null) {
       throw new RefreshTokenInvalidError();
@@ -47,13 +47,14 @@ export class RefreshTokenUseCase {
     }
 
     // Issue new refresh token
+    const newTokenId = uuidv7();
     const newPlaintextToken = randomUUID();
-    const newHashedToken = await this.passwordHasher.hash(newPlaintextToken);
+    const newTokenHash = createHash('sha256').update(newPlaintextToken).digest('hex');
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + this.refreshTokenTtlDays);
 
-    const newRefreshToken = RefreshToken.create(newPlaintextToken, existingToken.userId, newHashedToken, expiresAt);
+    const newRefreshToken = RefreshToken.create(newTokenId, existingToken.userId, newTokenHash, expiresAt);
     await this.refreshTokenRepository.save(newRefreshToken);
 
     const accessToken = this.tokenSigner.sign({ sub: user.id, email: user.email }, '15m');

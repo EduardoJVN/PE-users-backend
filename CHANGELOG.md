@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.0.0...v1.1.0) (2026-03-05)
+
+
+### Features
+
+* add prisma orm and supabase local ([e6ef72f](https://github.com/EduardoJVN/PE-users-backend/commit/e6ef72f6d155fdfa64d82660f8008f41ce7dce36))
+* connect local supabase ([5214a50](https://github.com/EduardoJVN/PE-users-backend/commit/5214a5051472779f25bbf155aba9102d4a463b8d))
+* error report global ([2d2e4f0](https://github.com/EduardoJVN/PE-users-backend/commit/2d2e4f0b6f00e52f3dab9646e0cbf90fed85ceec))
+* prisma orm ([33e5190](https://github.com/EduardoJVN/PE-users-backend/commit/33e5190a79614166cdf713557d3934fc08eae333))
+
+
+### Bug Fixes
+
+* format ([6a1b214](https://github.com/EduardoJVN/PE-users-backend/commit/6a1b2146d188722f4b7eccf780271c97c2580f70))
+
 ## 1.0.0 (2026-03-05)
 
 

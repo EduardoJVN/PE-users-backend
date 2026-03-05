@@ -6,7 +6,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 export default tseslint.config(
   {
     // Ignorar archivos de salida y config
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'vitest.config.ts'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'vitest.config.ts', 'prisma.config.ts'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

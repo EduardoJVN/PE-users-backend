@@ -19,6 +19,10 @@ class MockRefreshTokenRepository implements IRefreshTokenRepository {
     return this.store.find((t) => t.id === id) ?? null;
   }
 
+  async findByTokenHash(hash: string): Promise<RefreshToken | null> {
+    return this.store.find((t) => t.tokenHash === hash) ?? null;
+  }
+
   async findByUserId(userId: string): Promise<RefreshToken[]> {
     return this.store.filter((t) => t.userId === userId);
   }

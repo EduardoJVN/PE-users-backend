@@ -3,6 +3,7 @@ import { reportBootstrap } from '@infra/config/bootstrap-reporter.js';
 import { ENV } from '@infra/config/env.config.js';
 import { prisma } from '@infra/config/prisma.js';
 import { Logger } from '@infra/adapters/pino-logger.adapter.js';
+import { LogErrorReporter } from '@infra/adapters/log-error-reporter.adapter.js';
 import { PrismaUserAdapter } from '@infra/adapters/prisma-user.adapter.js';
 import { PrismaRefreshTokenAdapter } from '@infra/adapters/prisma-refresh-token.adapter.js';
 import { InMemoryTokenBlacklistAdapter } from '@infra/adapters/in-memory-token-blacklist.adapter.js';
@@ -16,6 +17,17 @@ import { createServer } from '@infra/entry-points/server.js';
 
 async function bootstrap() {
   const logger = new Logger();
+  const errorReporter = new LogErrorReporter(logger);
+
+  process.on('uncaughtException', (err) => {
+    errorReporter.report(err, { type: 'uncaughtException' });
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    errorReporter.report(reason, { type: 'unhandledRejection' });
+    process.exit(1);
+  });
 
   // --- Database ---
   await prisma.$connect();
@@ -57,7 +69,7 @@ async function bootstrap() {
   const authController = new AuthController(loginUseCase, refreshTokenUseCase, logoutUseCase);
 
   // --- Server ---
-  const app = createServer(authController);
+  const app = createServer(authController, errorReporter);
 
   process.on('SIGTERM', async () => {
     await prisma.$disconnect();

@@ -1,12 +1,16 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
-import type { Application } from 'express';
+import type { Application, Request, Response, NextFunction } from 'express';
+import type { IErrorReporter } from '@domain/ports/error-reporter.port.js';
 import type { AuthController } from '@infra/entry-points/auth.controller.js';
 import { createAuthRouter } from '@infra/entry-points/routes/auth.routes.js';
 import { openApiSpec } from '@infra/entry-points/docs/openapi.js';
 
-export function createServer(authController: AuthController): Application {
+export function createServer(
+  authController: AuthController,
+  errorReporter: IErrorReporter,
+): Application {
   const app = express();
 
   app.use(express.json());
@@ -20,8 +24,20 @@ export function createServer(authController: AuthController): Application {
 
   app.use('/auth', createAuthRouter(authController));
 
-  app.use('/health', (req, res) => {
+  app.use('/health', (_req, res) => {
     res.status(200).send('OK');
+  });
+
+  // 404 handler — no route matched
+  app.use((_req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+
+  // Global error handler — catches errors forwarded via next(err)
+
+  app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    errorReporter.report(err);
+    res.status(500).json({ error: 'Internal server error' });
   });
 
   return app;

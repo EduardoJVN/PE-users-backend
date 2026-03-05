@@ -9,8 +9,8 @@ datasource db {
 // --- ENUMS ---
 
 enum EmailVerificationStatus {
-  verify
-  reset
+  VERIFY
+  RESET
 }
 
 // --- ADMIN & STAFF ---

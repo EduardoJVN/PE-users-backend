@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "EmailVerificationStatus" AS ENUM ('verify', 'reset');
+CREATE TYPE "EmailVerificationStatus" AS ENUM ('VERIFY', 'RESET');
 
 -- CreateTable
 CREATE TABLE "admin_users" (

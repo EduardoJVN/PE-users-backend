@@ -159,6 +159,29 @@ Never group multiple operations in one class. Never add methods other than `exec
 
 **Dependency injection:** All dependencies are injected via constructor. Use cases receive ports (interfaces), never concrete adapters directly.
 
+**ID generation — three distinct roles, three distinct tools:**
+
+| Role | Tool | Why |
+|------|------|-----|
+| Entity PK (stored in DB) | `uuidv7()` from `uuidv7` package | Timestamp-prefixed → sequential inserts, no B-tree fragmentation |
+| Opaque security token (sent to client) | `randomUUID()` from `node:crypto` | Must be unpredictable; UUID v7 leaks timestamp |
+| Token lookup hash (stored in DB) | `createHash('sha256')` from `node:crypto` | Deterministic → O(1) lookup; bcrypt is for low-entropy passwords only |
+
+These three values are ALWAYS separate — never collapse entity ID and token value into one field.
+
+```typescript
+// ✅ Correct: three separate values
+const tokenId        = uuidv7();                                            // PK in DB
+const plaintextToken = randomUUID();                                        // sent to client
+const tokenHash      = createHash('sha256').update(plaintextToken).digest('hex'); // stored, used for lookup
+
+// ❌ Wrong: same UUID used as both PK and cookie value
+const plaintextToken = randomUUID();
+RefreshToken.create(plaintextToken, userId, bcrypt.hash(plaintextToken), expiresAt);
+```
+
+Repository ports for entities with token lookup must expose `findByTokenHash(hash: string)`, NOT rely on `findById(tokenValue)`. Use cases hash the incoming token before calling `findByTokenHash`.
+
 **Commit messages:** Conventional Commits enforced by commitlint. Allowed prefixes: `feat`, `fix`, `chore`, `docs`, `test`, `style`, `refactor`, `perf`.
 
 ## Module Creation Playbook

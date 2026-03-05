@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0 (2026-03-05)
+
+
+### Features
+
+* add env example ([9a7ec0f](https://github.com/EduardoJVN/PE-users-backend/commit/9a7ec0f2fbc44d0b8374a526bb9f30150e7778ac))
+* add env refresh token ([09586a0](https://github.com/EduardoJVN/PE-users-backend/commit/09586a0459b7a0572c26582c9509ef880a936c8d))
+* add express ([7325e02](https://github.com/EduardoJVN/PE-users-backend/commit/7325e026b41db77835a1bfa2e6552cb3b7281e95))
+* add swagger ([49ee5ad](https://github.com/EduardoJVN/PE-users-backend/commit/49ee5ad936b0163b173980da7066b5330c4f8c63))
+* auth be-01 ([639b3a1](https://github.com/EduardoJVN/PE-users-backend/commit/639b3a11da4f76e3d788b9da30c3135b3a22f096))
+* delete product example module ([743a65a](https://github.com/EduardoJVN/PE-users-backend/commit/743a65aa23d5abdb6629f9f323159f4cbbed679f))
+* dotenv ([344c5d0](https://github.com/EduardoJVN/PE-users-backend/commit/344c5d0575c37881b3b87e6c8fe1252059bac564))
+* uuid v7 database ([c0751ca](https://github.com/EduardoJVN/PE-users-backend/commit/c0751ca2217f81df3054290273dfb2c4e1b7655c))
+
 ## [1.2.1](https://github.com/EduardoJVN/typescript-hexagonal-clean-template/compare/v1.2.0...v1.2.1) (2026-03-02)
 
 

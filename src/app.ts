@@ -17,6 +17,10 @@ import { createServer } from '@infra/entry-points/server.js';
 async function bootstrap() {
   const logger = new Logger();
 
+  // --- Database ---
+  await prisma.$connect();
+  logger.info('Database connected');
+
   // --- Adapters ---
   const userRepo = new PrismaUserAdapter(prisma);
   const refreshTokenRepo = new PrismaRefreshTokenAdapter(prisma);

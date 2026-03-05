@@ -34,7 +34,9 @@ describe('InMemoryRefreshTokenAdapter', () => {
       await adapter.save(token);
 
       const duplicate = makeToken('t-1', 'u-2');
-      await expect(adapter.save(duplicate)).rejects.toThrow("RefreshToken with id 't-1' already exists");
+      await expect(adapter.save(duplicate)).rejects.toThrow(
+        "RefreshToken with id 't-1' already exists",
+      );
     });
   });
 
@@ -98,7 +100,14 @@ describe('InMemoryRefreshTokenAdapter', () => {
       const original = makeToken('t-1', 'u-1');
       await adapter.save(original);
 
-      const updated = RefreshToken.reconstitute('t-1', 'u-1', 'new-hash', futureDate(), new Date(), new Date());
+      const updated = RefreshToken.reconstitute(
+        't-1',
+        'u-1',
+        'new-hash',
+        futureDate(),
+        new Date(),
+        new Date(),
+      );
       await adapter.update(updated);
 
       const found = await adapter.findById('t-1');
@@ -107,7 +116,9 @@ describe('InMemoryRefreshTokenAdapter', () => {
 
     it('throws when updating a token that does not exist', async () => {
       const token = makeToken('t-999', 'u-1');
-      await expect(adapter.update(token)).rejects.toThrow("RefreshToken with id 't-999' does not exist");
+      await expect(adapter.update(token)).rejects.toThrow(
+        "RefreshToken with id 't-999' does not exist",
+      );
     });
   });
 

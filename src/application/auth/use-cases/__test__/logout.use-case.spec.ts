@@ -82,11 +82,25 @@ function makeFutureDate(days = 30): Date {
 }
 
 function makeValidToken(id = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(id, userId, 'hashed:uuid', makeFutureDate(), null, new Date('2024-01-01'));
+  return RefreshToken.reconstitute(
+    id,
+    userId,
+    'hashed:uuid',
+    makeFutureDate(),
+    null,
+    new Date('2024-01-01'),
+  );
 }
 
 function makeUsedToken(id = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(id, userId, 'hashed:uuid', makeFutureDate(), new Date('2024-01-02'), new Date('2024-01-01'));
+  return RefreshToken.reconstitute(
+    id,
+    userId,
+    'hashed:uuid',
+    makeFutureDate(),
+    new Date('2024-01-02'),
+    new Date('2024-01-01'),
+  );
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────

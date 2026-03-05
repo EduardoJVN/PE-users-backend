@@ -124,19 +124,46 @@ function makePastDate(daysAgo = 1): Date {
 
 // plaintextToken is the cookie value; id is the UUID v7 PK (separate)
 function makeValidToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(`id-of-${plaintextToken}`, userId, sha256(plaintextToken), makeFutureDate(), null, new Date('2024-01-01'));
+  return RefreshToken.reconstitute(
+    `id-of-${plaintextToken}`,
+    userId,
+    sha256(plaintextToken),
+    makeFutureDate(),
+    null,
+    new Date('2024-01-01'),
+  );
 }
 
 function makeExpiredToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(`id-of-${plaintextToken}`, userId, sha256(plaintextToken), makePastDate(), null, new Date('2024-01-01'));
+  return RefreshToken.reconstitute(
+    `id-of-${plaintextToken}`,
+    userId,
+    sha256(plaintextToken),
+    makePastDate(),
+    null,
+    new Date('2024-01-01'),
+  );
 }
 
 function makeUsedToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
-  return RefreshToken.reconstitute(`id-of-${plaintextToken}`, userId, sha256(plaintextToken), makeFutureDate(), new Date('2024-01-02'), new Date('2024-01-01'));
+  return RefreshToken.reconstitute(
+    `id-of-${plaintextToken}`,
+    userId,
+    sha256(plaintextToken),
+    makeFutureDate(),
+    new Date('2024-01-02'),
+    new Date('2024-01-01'),
+  );
 }
 
 function makeUser(id = 'user-1', email = 'test@example.com'): User {
-  return User.reconstitute(id, email, 'hashed:password', new Date('2024-01-01'), new Date('2024-01-01'));
+  return User.reconstitute(
+    id,
+    email,
+    'hashed:password',
+    new Date('2024-01-01'),
+    new Date('2024-01-01'),
+  );
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -153,13 +180,7 @@ describe('RefreshTokenUseCase', () => {
     userRepo = new MockUserRepository();
     tokenSigner = new MockTokenSigner();
     logger = new MockLogger();
-    useCase = new RefreshTokenUseCase(
-      refreshTokenRepo,
-      userRepo,
-      tokenSigner,
-      logger,
-      30,
-    );
+    useCase = new RefreshTokenUseCase(refreshTokenRepo, userRepo, tokenSigner, logger, 30);
   });
 
   it('returns new accessToken and refreshToken on a valid non-expired non-used token', async () => {
@@ -225,26 +246,26 @@ describe('RefreshTokenUseCase', () => {
 
   it('throws RefreshTokenInvalidError when token is not found', async () => {
     // repo is empty
-    await expect(
-      useCase.execute({ refreshToken: 'nonexistent-token' }),
-    ).rejects.toThrow(RefreshTokenInvalidError);
+    await expect(useCase.execute({ refreshToken: 'nonexistent-token' })).rejects.toThrow(
+      RefreshTokenInvalidError,
+    );
   });
 
   it('throws RefreshTokenExpiredError when token is expired', async () => {
     refreshTokenRepo.seed(makeExpiredToken());
 
-    await expect(
-      useCase.execute({ refreshToken: 'token-1' }),
-    ).rejects.toThrow(RefreshTokenExpiredError);
+    await expect(useCase.execute({ refreshToken: 'token-1' })).rejects.toThrow(
+      RefreshTokenExpiredError,
+    );
   });
 
   it('throws RefreshTokenInvalidError and calls deleteByUserId when token is already used (stolen token)', async () => {
     const usedToken = makeUsedToken('token-1', 'user-1');
     refreshTokenRepo.seed(usedToken);
 
-    await expect(
-      useCase.execute({ refreshToken: 'token-1' }),
-    ).rejects.toThrow(RefreshTokenInvalidError);
+    await expect(useCase.execute({ refreshToken: 'token-1' })).rejects.toThrow(
+      RefreshTokenInvalidError,
+    );
 
     expect(refreshTokenRepo.deleteByUserIdCalled).toBe(true);
     expect(refreshTokenRepo.deletedUserId).toBe('user-1');
@@ -255,9 +276,9 @@ describe('RefreshTokenUseCase', () => {
     refreshTokenRepo.seed(token);
     // userRepo is empty — no user with id 'user-1'
 
-    await expect(
-      useCase.execute({ refreshToken: 'token-1' }),
-    ).rejects.toThrow(RefreshTokenInvalidError);
+    await expect(useCase.execute({ refreshToken: 'token-1' })).rejects.toThrow(
+      RefreshTokenInvalidError,
+    );
   });
 
   it('signs the new access token with the user id and email', async () => {

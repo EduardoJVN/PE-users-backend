@@ -38,7 +38,10 @@ describe('JwtTokenSignerAdapter', () => {
       });
 
       const signerA = new JwtTokenSignerAdapter(privateKey, publicKey);
-      const verifierWithWrongKey = new JwtTokenSignerAdapter(otherPair.privateKey, otherPair.publicKey);
+      const verifierWithWrongKey = new JwtTokenSignerAdapter(
+        otherPair.privateKey,
+        otherPair.publicKey,
+      );
 
       const token = signerA.sign({ sub: 'u-1', email: 'a@b.com' }, '1h');
 
@@ -59,9 +62,9 @@ describe('JwtTokenSignerAdapter', () => {
 
       // Tamper with the payload section (middle part)
       const parts = token.split('.');
-      const tamperedPayload = Buffer.from(JSON.stringify({ sub: 'hacker', email: 'evil@bad.com' })).toString(
-        'base64url',
-      );
+      const tamperedPayload = Buffer.from(
+        JSON.stringify({ sub: 'hacker', email: 'evil@bad.com' }),
+      ).toString('base64url');
       const tamperedToken = `${parts[0]}.${tamperedPayload}.${parts[2]}`;
 
       expect(() => adapter.verify(tamperedToken)).toThrow();

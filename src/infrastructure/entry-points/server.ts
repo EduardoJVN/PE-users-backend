@@ -14,7 +14,9 @@ export function createServer(authController: AuthController): Application {
 
   app.use('/swagger', swaggerUi.serve);
   app.get('/swagger', swaggerUi.setup(openApiSpec));
-  app.get('/swagger.json', (_req, res) => { res.json(openApiSpec); });
+  app.get('/swagger.json', (_req, res) => {
+    res.json(openApiSpec);
+  });
 
   app.use('/auth', createAuthRouter(authController));
 

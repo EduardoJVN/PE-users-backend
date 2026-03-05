@@ -53,7 +53,14 @@ describe('RefreshToken', () => {
       const usedAt = new Date('2024-01-01');
       const createdAt = new Date('2023-12-01');
 
-      const token = RefreshToken.reconstitute('rt-99', 'user-99', 'h', expiresAt, usedAt, createdAt);
+      const token = RefreshToken.reconstitute(
+        'rt-99',
+        'user-99',
+        'h',
+        expiresAt,
+        usedAt,
+        createdAt,
+      );
 
       expect(token.id).toBe('rt-99');
       expect(token.userId).toBe('user-99');
@@ -64,7 +71,14 @@ describe('RefreshToken', () => {
     });
 
     it('reconstitutes with null usedAt', () => {
-      const token = RefreshToken.reconstitute('rt-1', 'user-1', 'h', futureDate(), null, new Date());
+      const token = RefreshToken.reconstitute(
+        'rt-1',
+        'user-1',
+        'h',
+        futureDate(),
+        null,
+        new Date(),
+      );
       expect(token.usedAt).toBeNull();
     });
   });

@@ -99,7 +99,10 @@ export class AuthController extends BaseController {
   }
 
   async logout(req: HttpRequest): Promise<HttpResponse> {
-    const refreshToken = req.cookies?.refreshToken ?? (req.body as Record<string, string> | undefined)?.refreshToken ?? '';
+    const refreshToken =
+      req.cookies?.refreshToken ??
+      (req.body as Record<string, string> | undefined)?.refreshToken ??
+      '';
     const accessToken = req.headers?.authorization?.replace('Bearer ', '');
 
     return this.handleRequest(

@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import type { AuthController } from '@infra/entry-points/auth.controller.js';
-import type { HttpRequest, HttpResponse, ResponseCookie } from '@infra/entry-points/base.controller.js';
+import type {
+  HttpRequest,
+  HttpResponse,
+  ResponseCookie,
+} from '@infra/entry-points/base.controller.js';
 
 function toHttpRequest(req: Request): HttpRequest {
   return {

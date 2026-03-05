@@ -51,7 +51,13 @@ describe('User', () => {
     it('reconstitutes a user with the exact provided values', () => {
       const createdAt = new Date('2024-01-01T00:00:00Z');
       const updatedAt = new Date('2024-06-01T00:00:00Z');
-      const user = User.reconstitute('user-42', 'bob@example.com', 'hash-xyz', createdAt, updatedAt);
+      const user = User.reconstitute(
+        'user-42',
+        'bob@example.com',
+        'hash-xyz',
+        createdAt,
+        updatedAt,
+      );
 
       expect(user.id).toBe('user-42');
       expect(user.email).toBe('bob@example.com');

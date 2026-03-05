@@ -25,9 +25,14 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('returns 200 with accessToken in body and refreshToken cookie on success', async () => {
-      mockLogin.execute.mockResolvedValue({ accessToken: 'access-jwt', refreshToken: 'plaintext-rt' });
+      mockLogin.execute.mockResolvedValue({
+        accessToken: 'access-jwt',
+        refreshToken: 'plaintext-rt',
+      });
 
-      const response = await controller.login({ body: { email: 'alice@example.com', password: 'secret' } });
+      const response = await controller.login({
+        body: { email: 'alice@example.com', password: 'secret' },
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ accessToken: 'access-jwt' });
@@ -40,7 +45,9 @@ describe('AuthController', () => {
     });
 
     it('returns 400 when body fails Zod validation without calling use case', async () => {
-      const response = await controller.login({ body: { email: 'not-an-email', password: 'secret' } });
+      const response = await controller.login({
+        body: { email: 'not-an-email', password: 'secret' },
+      });
 
       expect(response.status).toBe(400);
       expect(mockLogin.execute).not.toHaveBeenCalled();
@@ -56,7 +63,9 @@ describe('AuthController', () => {
     it('returns 401 when use case throws InvalidCredentialsError', async () => {
       mockLogin.execute.mockRejectedValue(new InvalidCredentialsError());
 
-      const response = await controller.login({ body: { email: 'alice@example.com', password: 'wrong' } });
+      const response = await controller.login({
+        body: { email: 'alice@example.com', password: 'wrong' },
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toEqual({ error: 'Invalid email or password' });
@@ -65,7 +74,9 @@ describe('AuthController', () => {
     it('returns 401 for unexpected errors (via 401 remapping)', async () => {
       mockLogin.execute.mockRejectedValue(new Error('Database down'));
 
-      const response = await controller.login({ body: { email: 'alice@example.com', password: 'secret' } });
+      const response = await controller.login({
+        body: { email: 'alice@example.com', password: 'secret' },
+      });
 
       // Unexpected errors are caught by handleRequest as 500, but our onError callback always returns 401
       expect(response.status).toBe(401);

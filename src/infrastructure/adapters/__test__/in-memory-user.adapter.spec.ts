@@ -76,7 +76,13 @@ describe('InMemoryUserAdapter', () => {
     it('replaces the stored user', async () => {
       await adapter.save(makeUser('u-1', 'alice@example.com'));
 
-      const updated = User.reconstitute('u-1', 'alice-new@example.com', 'new-hash', new Date(), new Date());
+      const updated = User.reconstitute(
+        'u-1',
+        'alice-new@example.com',
+        'new-hash',
+        new Date(),
+        new Date(),
+      );
       await adapter.update(updated);
 
       const found = await adapter.findById('u-1');

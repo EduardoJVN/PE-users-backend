@@ -127,7 +127,15 @@ describe('LoginUseCase', () => {
     tokenSigner = new MockTokenSigner();
     passwordHasher = new MockPasswordHasher();
     logger = new MockLogger();
-    useCase = new LoginUseCase(userRepo, refreshTokenRepo, tokenSigner, passwordHasher, logger, 30, 'dummy-hash');
+    useCase = new LoginUseCase(
+      userRepo,
+      refreshTokenRepo,
+      tokenSigner,
+      passwordHasher,
+      logger,
+      30,
+      'dummy-hash',
+    );
   });
 
   it('returns accessToken and refreshToken on valid credentials', async () => {
@@ -135,7 +143,10 @@ describe('LoginUseCase', () => {
     userRepo.seed(user);
     passwordHasher.compare.mockResolvedValue(true);
 
-    const result = await useCase.execute({ email: 'test@example.com', password: 'correct-password' });
+    const result = await useCase.execute({
+      email: 'test@example.com',
+      password: 'correct-password',
+    });
 
     expect(result.accessToken).toBe('signed-access-token');
     expect(typeof result.refreshToken).toBe('string');
@@ -158,7 +169,10 @@ describe('LoginUseCase', () => {
     userRepo.seed(user);
     passwordHasher.compare.mockResolvedValue(true);
 
-    const result = await useCase.execute({ email: 'test@example.com', password: 'correct-password' });
+    const result = await useCase.execute({
+      email: 'test@example.com',
+      password: 'correct-password',
+    });
 
     const expectedHash = createHash('sha256').update(result.refreshToken).digest('hex');
     expect(refreshTokenRepo.saved[0].tokenHash).toBe(expectedHash);
@@ -217,9 +231,9 @@ describe('LoginUseCase', () => {
     userRepo.seed(user);
     passwordHasher.compare.mockResolvedValue(false);
 
-    await expect(
-      useCase.execute({ email: 'test@example.com', password: 'wrong' }),
-    ).rejects.toThrow(InvalidCredentialsError);
+    await expect(useCase.execute({ email: 'test@example.com', password: 'wrong' })).rejects.toThrow(
+      InvalidCredentialsError,
+    );
 
     expect(refreshTokenRepo.saved).toHaveLength(0);
   });
@@ -228,9 +242,9 @@ describe('LoginUseCase', () => {
     const dbError = new Error('DB connection failed');
     vi.spyOn(userRepo, 'findByEmail').mockRejectedValue(dbError);
 
-    await expect(
-      useCase.execute({ email: 'test@example.com', password: 'any' }),
-    ).rejects.toThrow('DB connection failed');
+    await expect(useCase.execute({ email: 'test@example.com', password: 'any' })).rejects.toThrow(
+      'DB connection failed',
+    );
   });
 
   it('propagates error when IRefreshTokenRepository.save throws', async () => {

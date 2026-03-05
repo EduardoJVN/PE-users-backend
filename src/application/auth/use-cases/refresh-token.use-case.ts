@@ -7,7 +7,10 @@ import type { IRefreshTokenRepository } from '@domain/auth/ports/refresh-token.r
 import type { ITokenSigner } from '@domain/auth/ports/token-signer.port.js';
 import type { IUserRepository } from '@domain/user/ports/user.repository.port.js';
 import type { ILogger } from '@domain/ports/logger.port.js';
-import type { RefreshTokenCommand, RefreshTokenResult } from '@application/auth/dto/refresh-token-auth.dto.js';
+import type {
+  RefreshTokenCommand,
+  RefreshTokenResult,
+} from '@application/auth/dto/refresh-token-auth.dto.js';
 
 export class RefreshTokenUseCase {
   constructor(
@@ -54,7 +57,12 @@ export class RefreshTokenUseCase {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + this.refreshTokenTtlDays);
 
-    const newRefreshToken = RefreshToken.create(newTokenId, existingToken.userId, newTokenHash, expiresAt);
+    const newRefreshToken = RefreshToken.create(
+      newTokenId,
+      existingToken.userId,
+      newTokenHash,
+      expiresAt,
+    );
     await this.refreshTokenRepository.save(newRefreshToken);
 
     const accessToken = this.tokenSigner.sign({ sub: user.id, email: user.email }, '15m');

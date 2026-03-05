@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { reportBootstrap } from '@infra/config/bootstrap-reporter.js';
 import { ENV } from '@infra/config/env.config.js';
+import { prisma } from '@infra/config/prisma.js';
 import { Logger } from '@infra/adapters/pino-logger.adapter.js';
-import { InMemoryUserAdapter } from '@infra/adapters/in-memory-user.adapter.js';
-import { InMemoryRefreshTokenAdapter } from '@infra/adapters/in-memory-refresh-token.adapter.js';
+import { PrismaUserAdapter } from '@infra/adapters/prisma-user.adapter.js';
+import { PrismaRefreshTokenAdapter } from '@infra/adapters/prisma-refresh-token.adapter.js';
 import { InMemoryTokenBlacklistAdapter } from '@infra/adapters/in-memory-token-blacklist.adapter.js';
 import { BcryptPasswordHasherAdapter } from '@infra/adapters/bcrypt-password-hasher.adapter.js';
 import { JwtTokenSignerAdapter } from '@infra/adapters/jwt-token-signer.adapter.js';
@@ -16,9 +17,14 @@ import { createServer } from '@infra/entry-points/server.js';
 async function bootstrap() {
   const logger = new Logger();
 
+  // --- Database ---
+  await prisma.$connect();
+  logger.info('Database connected');
+
   // --- Adapters ---
-  const userRepo = new InMemoryUserAdapter();
-  const refreshTokenRepo = new InMemoryRefreshTokenAdapter();
+  const userRepo = new PrismaUserAdapter(prisma);
+  const refreshTokenRepo = new PrismaRefreshTokenAdapter(prisma);
+
   const tokenBlacklist = new InMemoryTokenBlacklistAdapter();
   const passwordHasher = new BcryptPasswordHasherAdapter();
   const tokenSigner = new JwtTokenSignerAdapter(
@@ -52,6 +58,11 @@ async function bootstrap() {
 
   // --- Server ---
   const app = createServer(authController);
+
+  process.on('SIGTERM', async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });
 
   app.listen(ENV.PORT, () => {
     reportBootstrap(logger);

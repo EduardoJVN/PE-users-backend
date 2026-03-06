@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.1.0...v1.2.0) (2026-03-06)
+
+
+### Features
+
+* model and migrations ([ee7731f](https://github.com/EduardoJVN/PE-users-backend/commit/ee7731f39f0ca9042c2a276d517596df1e764daf))
+* model and migrations ([0926d9b](https://github.com/EduardoJVN/PE-users-backend/commit/0926d9ba88a2790eb4515e2880b45f16bde2a47e))
+
+
+### Bug Fixes
+
+* enum databse ([1afa5c7](https://github.com/EduardoJVN/PE-users-backend/commit/1afa5c7fa1304dc1c0793d51277b4670c5eaf1b0))
+
 ## [1.1.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.0.0...v1.1.0) (2026-03-05)
 
 

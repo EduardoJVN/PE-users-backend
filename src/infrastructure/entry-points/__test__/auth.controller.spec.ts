@@ -236,7 +236,7 @@ describe('AuthController', () => {
   describe('register', () => {
     const validBody = {
       email: 'alice@example.com',
-      password: 'secret',
+      password: 'StrongPass1!',
       name: 'Alice',
       lastName: 'Smith',
     };
@@ -260,8 +260,36 @@ describe('AuthController', () => {
       });
     });
 
-    it('returns 400 when body fails Zod validation without calling use case', async () => {
-      const response = await controller.register({ body: { email: 'not-an-email' } });
+    it('returns 400 when email is invalid', async () => {
+      const response = await controller.register({ body: { ...validBody, email: 'not-an-email' } });
+
+      expect(response.status).toBe(400);
+      expect(mockRegister.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when password is too short', async () => {
+      const response = await controller.register({ body: { ...validBody, password: 'Ab1!' } });
+
+      expect(response.status).toBe(400);
+      expect(mockRegister.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when password has no uppercase letter', async () => {
+      const response = await controller.register({ body: { ...validBody, password: 'weakpass1!' } });
+
+      expect(response.status).toBe(400);
+      expect(mockRegister.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when password has no number', async () => {
+      const response = await controller.register({ body: { ...validBody, password: 'WeakPass!' } });
+
+      expect(response.status).toBe(400);
+      expect(mockRegister.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when password has no special character', async () => {
+      const response = await controller.register({ body: { ...validBody, password: 'WeakPass1' } });
 
       expect(response.status).toBe(400);
       expect(mockRegister.execute).not.toHaveBeenCalled();
@@ -396,6 +424,42 @@ describe('AuthController', () => {
 
     it('returns 400 when newPassword is missing', async () => {
       const response = await controller.resetPassword({ body: { token: 'some-token' } });
+
+      expect(response.status).toBe(400);
+      expect(mockResetPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when newPassword is too short', async () => {
+      const response = await controller.resetPassword({
+        body: { token: 'reset-token', newPassword: 'Ab1!' },
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockResetPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when newPassword has no uppercase letter', async () => {
+      const response = await controller.resetPassword({
+        body: { token: 'reset-token', newPassword: 'weakpass1!' },
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockResetPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when newPassword has no number', async () => {
+      const response = await controller.resetPassword({
+        body: { token: 'reset-token', newPassword: 'WeakPass!' },
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockResetPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when newPassword has no special character', async () => {
+      const response = await controller.resetPassword({
+        body: { token: 'reset-token', newPassword: 'WeakPass1' },
+      });
 
       expect(response.status).toBe(400);
       expect(mockResetPassword.execute).not.toHaveBeenCalled();

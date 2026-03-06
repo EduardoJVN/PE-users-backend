@@ -50,6 +50,7 @@ src/
 ├── infrastructure/
 │   ├── adapters/          # DB, email, logger implementations
 │   ├── entry-points/      # HTTP controllers (BaseController lives here)
+│   │   └── schemas/       # Zod schemas por módulo ({module}.schemas.ts)
 │   └── config/            # env vars, bootstrap helpers
 ├── shared/
 │   └── errors/            # DomainError, NotFoundError base classes
@@ -484,19 +485,59 @@ class MockLogger implements ILogger {
 
 **Zod belongs ONLY in infrastructure/entry-points.** Never in domain or application.
 
-Always use `safeParse` (not `parse`) in controllers — it returns `{ success, data, error }` instead of throwing, which lets you return a structured 400 without hitting the `handleRequest` catch block.
+### Schema file location — mandatory
+
+Every module has its schemas in a dedicated file. **Never define schemas inline inside a controller.**
+
+```
+src/infrastructure/entry-points/
+  schemas/
+    auth.schemas.ts      ← all Zod schemas for auth module
+    user.schemas.ts      ← all Zod schemas for user module
+    shared.schemas.ts    ← reusable sub-schemas (e.g. passwordSchema)
+  auth.controller.ts     ← imports from ./schemas/auth.schemas.js
+  user.controller.ts     ← imports from ./schemas/user.schemas.js
+```
+
+Naming conventions:
+- Schema files: `{module}.schemas.ts`
+- Request schemas: `PascalCase` (e.g. `LoginSchema`, `RegisterSchema`)
+- Reusable sub-schemas: `camelCase` (e.g. `passwordSchema`)
 
 ```typescript
-// ✅ infrastructure/entry-points/{module}.controller.ts
-const schema = z.object({ email: z.string().email(), name: z.string().min(1) });
+// ✅ infrastructure/entry-points/schemas/auth.schemas.ts
+import { z } from 'zod';
 
-const parsed = schema.safeParse(req.body);
+export const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter');
+
+export const RegisterSchema = z.object({
+  email: z.string().email(),
+  password: passwordSchema,   // reuse sub-schema
+  name: z.string().min(1),
+});
+
+// ✅ infrastructure/entry-points/auth.controller.ts
+import { LoginSchema, RegisterSchema } from './schemas/auth.schemas.js';
+
+// ❌ Never define schemas inline in the controller
+const LoginSchema = z.object({ ... });  // wrong — belongs in schemas/
+```
+
+### Usage in controllers
+
+Always use `safeParse` (not `parse`) — it returns `{ success, data, error }` instead of throwing, which lets you return a structured 400 without hitting the `handleRequest` catch block.
+
+```typescript
+const parsed = LoginSchema.safeParse(req.body);
 // Always use parsed.error.message — not .format() or .issues
 if (!parsed.success) return { status: 400, body: { error: parsed.error.message } };
 
-await this.handleRequest(
+return this.handleRequest(
   () => useCase.execute(parsed.data),
-  (result) => ({ status: 201, body: result }),
+  (result) => ({ status: 200, body: result }),
   (error) => ({ status: error.status, body: { error: error.message } }),
 );
 
@@ -580,6 +621,7 @@ export class InvalidPriceError extends DomainError {
 | Use `vi.fn()` to mock a port | Doesn't enforce the interface contract |
 | Call `console.log` in domain or application | Inject `ILogger` instead |
 | Put Zod schemas in domain or application | Validation is an infrastructure concern |
+| Define Zod schemas inline in a controller | Schemas go in `entry-points/schemas/{module}.schemas.ts` |
 | Throw `new Error()` from domain | Use a typed `DomainError` subclass |
 | Add business logic to a controller | Controllers only translate, never decide |
 | Access `process.env` outside `infrastructure/config/` | Centralizes env coupling |

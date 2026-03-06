@@ -1,6 +1,14 @@
-import { z } from 'zod';
 import { BaseController } from './base.controller.js';
 import type { HttpRequest, HttpResponse } from './base.controller.js';
+import { ENV } from '@infra/config/env.config.js';
+import {
+  LoginSchema,
+  RefreshSchema,
+  RegisterSchema,
+  ResendVerificationSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from './schemas/auth.schemas.js';
 import type { LoginUseCase } from '@application/auth/use-cases/login.use-case.js';
 import type { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case.js';
 import type { LogoutUseCase } from '@application/auth/use-cases/logout.use-case.js';
@@ -10,36 +18,7 @@ import type { ResendVerificationEmailUseCase } from '@application/auth/use-cases
 import type { ForgotPasswordUseCase } from '@application/auth/use-cases/forgot-password.use-case.js';
 import type { ResetPasswordUseCase } from '@application/auth/use-cases/reset-password.use-case.js';
 
-const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-
-const RefreshSchema = z.object({
-  refreshToken: z.string().min(1),
-});
-
-const RegisterSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-  name: z.string().min(1),
-  lastName: z.string().min(1),
-});
-
-const ResendVerificationSchema = z.object({
-  userId: z.string().uuid(),
-});
-
-const ForgotPasswordSchema = z.object({
-  email: z.string().email(),
-});
-
-const ResetPasswordSchema = z.object({
-  token: z.string().min(1),
-  newPassword: z.string().min(1),
-});
-
-const REFRESH_TOKEN_MAX_AGE = 30 * 24 * 60 * 60;
+const REFRESH_TOKEN_MAX_AGE = ENV.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60;
 
 export class AuthController extends BaseController {
   constructor(

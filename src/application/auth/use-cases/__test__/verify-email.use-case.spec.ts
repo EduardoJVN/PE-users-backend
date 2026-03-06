@@ -9,6 +9,7 @@ import { EmailVerificationTokenInvalidError } from '@domain/auth/errors/email-ve
 import { EmailVerificationTokenExpiredError } from '@domain/auth/errors/email-verification-token-expired.error.js';
 import { UserAlreadyVerifiedError } from '@domain/auth/errors/user-already-verified.error.js';
 import { createHash } from 'node:crypto';
+import { UserStatusId } from '@domain/catalog-ids.js';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -82,8 +83,6 @@ class MockLogger implements ILogger {
 const PLAINTEXT_TOKEN = 'plaintext-test-token-uuid';
 const TOKEN_HASH = createHash('sha256').update(PLAINTEXT_TOKEN).digest('hex');
 const USER_ID = 'user-1';
-const ACTIVE_STATUS_ID = 2;
-
 function makePendingUser(overrides?: Partial<{ id: string; isActive: boolean }>): User {
   return User.reconstitute(
     overrides?.id ?? USER_ID,
@@ -134,7 +133,7 @@ describe('VerifyEmailUseCase', () => {
     userRepo = new MockUserRepository();
     evtRepo = new MockEmailVerificationTokenRepository();
     logger = new MockLogger();
-    useCase = new VerifyEmailUseCase(userRepo, evtRepo, logger, ACTIVE_STATUS_ID);
+    useCase = new VerifyEmailUseCase(userRepo, evtRepo, logger);
   });
 
   it('happy path: activates user, deletes token, returns success message', async () => {
@@ -149,7 +148,7 @@ describe('VerifyEmailUseCase', () => {
     // user should be updated (isActive = true)
     const updatedUser = await userRepo.findById(USER_ID);
     expect(updatedUser?.isActive).toBe(true);
-    expect(updatedUser?.statusId).toBe(ACTIVE_STATUS_ID);
+    expect(updatedUser?.statusId).toBe(UserStatusId.ACTIVE);
     // token should be deleted
     expect(evtRepo.getAll()).toHaveLength(0);
     expect(logger.info).toHaveBeenCalledWith('Email verified', { userId: USER_ID });

@@ -20,6 +20,10 @@ const EnvSchema = z.object({
   RESEND_API_KEY: isTest ? z.string().default('') : z.string().min(1),
   RESEND_FROM_EMAIL: isTest ? z.string().default('') : z.string().email(),
   FRONTEND_URL: isTest ? z.string().default('') : z.string().url(),
+  VERIFICATION_TOKEN_TTL_MS: z.coerce.number().int().positive().default(86_400_000), // 24h
+  RESET_TOKEN_TTL_MS: z.coerce.number().int().positive().default(3_600_000), // 1h
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(3_600_000), // 1h
+  RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
 });
 
 const result = EnvSchema.safeParse(process.env);
@@ -43,4 +47,8 @@ export const ENV = {
   RESEND_API_KEY: result.data.RESEND_API_KEY,
   RESEND_FROM_EMAIL: result.data.RESEND_FROM_EMAIL,
   FRONTEND_URL: result.data.FRONTEND_URL,
+  VERIFICATION_TOKEN_TTL_MS: result.data.VERIFICATION_TOKEN_TTL_MS,
+  RESET_TOKEN_TTL_MS: result.data.RESET_TOKEN_TTL_MS,
+  RATE_LIMIT_WINDOW_MS: result.data.RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX_ATTEMPTS: result.data.RATE_LIMIT_MAX_ATTEMPTS,
 };

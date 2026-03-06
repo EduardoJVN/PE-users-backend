@@ -145,7 +145,8 @@ describe('ResendVerificationEmailUseCase', () => {
     expect(evtRepo.saved[0].userId).toBe(USER_ID);
     expect(evtRepo.saved[0].type).toBe('VERIFY');
     expect(emailSender.sendVerificationEmail).toHaveBeenCalledOnce();
-    const callArgs = emailSender.sendVerificationEmail.mock.calls[0][0] as SendVerificationEmailParams;
+    const callArgs = emailSender.sendVerificationEmail.mock
+      .calls[0][0] as SendVerificationEmailParams;
     expect(callArgs.to).toBe('test@example.com');
     expect(callArgs.verificationUrl).toContain(VERIFICATION_BASE_URL);
     expect(callArgs.verificationUrl).toContain('?token=');
@@ -186,10 +187,14 @@ describe('ResendVerificationEmailUseCase', () => {
     userRepo.seed(user);
     rateLimiter.checkAndIncrement.mockResolvedValue(false);
 
-    const error = await useCase.execute({ userId: USER_ID, rateLimitKey: RATE_LIMIT_KEY }).catch((e: unknown) => e);
+    const error = await useCase
+      .execute({ userId: USER_ID, rateLimitKey: RATE_LIMIT_KEY })
+      .catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(RateLimitExceededError);
-    expect((error as RateLimitExceededError).retryAfterSeconds).toBe(Math.ceil(RATE_LIMIT_WINDOW_MS / 1000));
+    expect((error as RateLimitExceededError).retryAfterSeconds).toBe(
+      Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
+    );
   });
 
   it('propagates error if emailSender throws', async () => {

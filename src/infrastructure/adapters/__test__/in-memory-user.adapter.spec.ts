@@ -3,7 +3,21 @@ import { InMemoryUserAdapter } from '@infra/adapters/in-memory-user.adapter.js';
 import { User } from '@domain/user/entities/user.entity.js';
 
 const makeUser = (id: string, email: string): User =>
-  User.reconstitute(id, email, 'hashed-password', 'Test', 'User', null, 1, 1, 1, true, new Date('2024-01-01'), new Date('2024-01-01'), null);
+  User.reconstitute(
+    id,
+    email,
+    'hashed-password',
+    'Test',
+    'User',
+    null,
+    1,
+    1,
+    1,
+    true,
+    new Date('2024-01-01'),
+    new Date('2024-01-01'),
+    null,
+  );
 
 describe('InMemoryUserAdapter', () => {
   let adapter: InMemoryUserAdapter;

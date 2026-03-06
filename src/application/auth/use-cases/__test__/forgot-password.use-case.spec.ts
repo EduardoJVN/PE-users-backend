@@ -142,7 +142,9 @@ describe('ForgotPasswordUseCase', () => {
     expect(evtRepo.saved[0].userId).toBe('user-1');
 
     expect(emailSender.sendPasswordResetEmail).toHaveBeenCalledTimes(1);
-    const [params] = emailSender.sendPasswordResetEmail.mock.calls[0] as [{ to: string; resetUrl: string }];
+    const [params] = emailSender.sendPasswordResetEmail.mock.calls[0] as [
+      { to: string; resetUrl: string },
+    ];
     expect(params.to).toBe('test@example.com');
     expect(params.resetUrl).toContain(RESET_BASE_URL);
     expect(params.resetUrl).toContain('?token=');
@@ -154,7 +156,9 @@ describe('ForgotPasswordUseCase', () => {
 
     await useCase.execute({ email: 'test@example.com', rateLimitKey: 'reset:user-ip' });
 
-    const [params] = emailSender.sendPasswordResetEmail.mock.calls[0] as [{ to: string; resetUrl: string }];
+    const [params] = emailSender.sendPasswordResetEmail.mock.calls[0] as [
+      { to: string; resetUrl: string },
+    ];
     const urlParams = new URL(params.resetUrl);
     const plaintextToken = urlParams.searchParams.get('token') ?? '';
     const expectedHash = createHash('sha256').update(plaintextToken).digest('hex');

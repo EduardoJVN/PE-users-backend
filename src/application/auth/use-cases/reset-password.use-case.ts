@@ -2,14 +2,15 @@ import { createHash } from 'node:crypto';
 import { User } from '@domain/user/entities/user.entity.js';
 import { EmailVerificationTokenExpiredError } from '@domain/auth/errors/email-verification-token-expired.error.js';
 import { EmailVerificationTokenInvalidError } from '@domain/auth/errors/email-verification-token-invalid.error.js';
-import { PasswordTooWeakError } from '@domain/auth/errors/password-too-weak.error.js';
+import { Password } from '@domain/auth/value-objects/password.value-object.js';
 import type { IEmailVerificationTokenRepository } from '@domain/auth/ports/email-verification-token.repository.port.js';
 import type { IPasswordHasher } from '@domain/auth/ports/password-hasher.port.js';
 import type { IUserRepository } from '@domain/user/ports/user.repository.port.js';
 import type { ILogger } from '@domain/ports/logger.port.js';
-import type { ResetPasswordCommand, ResetPasswordResult } from '@application/auth/dto/reset-password-auth.dto.js';
-
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/;
+import type {
+  ResetPasswordCommand,
+  ResetPasswordResult,
+} from '@application/auth/dto/reset-password-auth.dto.js';
 
 export class ResetPasswordUseCase {
   constructor(
@@ -20,9 +21,7 @@ export class ResetPasswordUseCase {
   ) {}
 
   async execute(command: ResetPasswordCommand): Promise<ResetPasswordResult> {
-    if (!PASSWORD_REGEX.test(command.newPassword)) {
-      throw new PasswordTooWeakError();
-    }
+    const password = Password.create(command.newPassword);
 
     const tokenHash = createHash('sha256').update(command.token).digest('hex');
     const token = await this.evtRepo.findByTokenHash(tokenHash);
@@ -49,7 +48,7 @@ export class ResetPasswordUseCase {
       throw new EmailVerificationTokenInvalidError();
     }
 
-    const newPasswordHash = await this.passwordHasher.hash(command.newPassword);
+    const newPasswordHash = await this.passwordHasher.hash(password.value);
 
     const updated = User.reconstitute(
       user.id,

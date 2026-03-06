@@ -133,6 +133,36 @@ describe('env.config', () => {
     expect(ENV.RESEND_API_KEY).toBe('');
     expect(ENV.RESEND_FROM_EMAIL).toBe('');
     expect(ENV.FRONTEND_URL).toBe('');
+    expect(ENV.VERIFICATION_TOKEN_TTL_MS).toBe(86_400_000);
+    expect(ENV.RESET_TOKEN_TTL_MS).toBe(3_600_000);
+    expect(ENV.RATE_LIMIT_WINDOW_MS).toBe(3_600_000);
+    expect(ENV.RATE_LIMIT_MAX_ATTEMPTS).toBe(3);
+  });
+
+  it('uses default values for TTLs and rate limit when not set', async () => {
+    prodEnv();
+
+    const { ENV } = await import('@infra/config/env.config.js');
+
+    expect(ENV.VERIFICATION_TOKEN_TTL_MS).toBe(86_400_000);
+    expect(ENV.RESET_TOKEN_TTL_MS).toBe(3_600_000);
+    expect(ENV.RATE_LIMIT_WINDOW_MS).toBe(3_600_000);
+    expect(ENV.RATE_LIMIT_MAX_ATTEMPTS).toBe(3);
+  });
+
+  it('overrides TTLs and rate limit when set via env', async () => {
+    prodEnv();
+    process.env.VERIFICATION_TOKEN_TTL_MS = '172800000'; // 48h
+    process.env.RESET_TOKEN_TTL_MS = '7200000'; // 2h
+    process.env.RATE_LIMIT_WINDOW_MS = '1800000'; // 30min
+    process.env.RATE_LIMIT_MAX_ATTEMPTS = '5';
+
+    const { ENV } = await import('@infra/config/env.config.js');
+
+    expect(ENV.VERIFICATION_TOKEN_TTL_MS).toBe(172_800_000);
+    expect(ENV.RESET_TOKEN_TTL_MS).toBe(7_200_000);
+    expect(ENV.RATE_LIMIT_WINDOW_MS).toBe(1_800_000);
+    expect(ENV.RATE_LIMIT_MAX_ATTEMPTS).toBe(5);
   });
 
   it('throws when FRONTEND_URL is missing in non-test env', async () => {

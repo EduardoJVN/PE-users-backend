@@ -144,7 +144,6 @@ describe('LoginUseCase', () => {
       logger,
       30,
       'dummy-hash',
-      1,
     );
   });
 

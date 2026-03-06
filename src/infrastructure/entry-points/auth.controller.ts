@@ -179,7 +179,10 @@ export class AuthController extends BaseController {
     const rateLimitKey = `forgot:email:${parsed.data.email}`;
     return this.handleRequest(
       () => this.forgotPasswordUseCase.execute({ email: parsed.data.email, rateLimitKey }),
-      () => ({ status: 200, body: { message: 'If your account exists, a password reset email has been sent' } }),
+      () => ({
+        status: 200,
+        body: { message: 'If your account exists, a password reset email has been sent' },
+      }),
       (error) => ({ status: error.status, body: { error: error.message } }),
     );
   }

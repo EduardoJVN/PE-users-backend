@@ -8,7 +8,10 @@ import type { IUserRepository } from '@domain/user/ports/user.repository.port.js
 import type { IEmailSender } from '@domain/ports/email-sender.port.js';
 import type { IRateLimiter } from '@domain/ports/rate-limiter.port.js';
 import type { ILogger } from '@domain/ports/logger.port.js';
-import type { ResendVerificationCommand, ResendVerificationResult } from '@application/auth/dto/resend-verification-auth.dto.js';
+import type {
+  ResendVerificationCommand,
+  ResendVerificationResult,
+} from '@application/auth/dto/resend-verification-auth.dto.js';
 
 const SILENT_MESSAGE = 'If your account exists, a verification email has been sent';
 
@@ -48,7 +51,13 @@ export class ResendVerificationEmailUseCase {
     const plaintextToken = randomUUID();
     const tokenHash = createHash('sha256').update(plaintextToken).digest('hex');
     const expiresAt = new Date(Date.now() + this.tokenTtlMs);
-    const token = EmailVerificationToken.create(tokenId, command.userId, tokenHash, 'VERIFY', expiresAt);
+    const token = EmailVerificationToken.create(
+      tokenId,
+      command.userId,
+      tokenHash,
+      'VERIFY',
+      expiresAt,
+    );
 
     await this.evtRepo.save(token);
 

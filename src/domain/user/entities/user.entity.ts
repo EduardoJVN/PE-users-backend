@@ -33,7 +33,21 @@ export class User {
       throw new InvalidEmailFormatError(email);
     }
     const now = new Date();
-    return new User(id, email, password, name, lastName, null, statusId, roleId, registerTypeId, false, now, now, null);
+    return new User(
+      id,
+      email,
+      password,
+      name,
+      lastName,
+      null,
+      statusId,
+      roleId,
+      registerTypeId,
+      false,
+      now,
+      now,
+      null,
+    );
   }
 
   static reconstitute(
@@ -51,7 +65,21 @@ export class User {
     updatedAt: Date,
     deletedAt: Date | null,
   ): User {
-    return new User(id, email, password, name, lastName, avatarUrl, statusId, roleId, registerTypeId, isActive, createdAt, updatedAt, deletedAt);
+    return new User(
+      id,
+      email,
+      password,
+      name,
+      lastName,
+      avatarUrl,
+      statusId,
+      roleId,
+      registerTypeId,
+      isActive,
+      createdAt,
+      updatedAt,
+      deletedAt,
+    );
   }
 
   activate(activeStatusId: number): User {

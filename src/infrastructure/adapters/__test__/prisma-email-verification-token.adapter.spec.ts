@@ -3,7 +3,9 @@ import type { PrismaClient } from '@prisma/client';
 import { PrismaEmailVerificationTokenAdapter } from '@infra/adapters/prisma-email-verification-token.adapter.js';
 import { EmailVerificationToken } from '@domain/auth/entities/email-verification-token.entity.js';
 
-const makeEntity = (overrides?: Partial<{ id: string; userId: string; type: 'VERIFY' | 'RESET' }>): EmailVerificationToken => {
+const makeEntity = (
+  overrides?: Partial<{ id: string; userId: string; type: 'VERIFY' | 'RESET' }>,
+): EmailVerificationToken => {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   return EmailVerificationToken.create(
     overrides?.id ?? 'evt-1',

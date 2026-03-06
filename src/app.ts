@@ -41,18 +41,6 @@ async function bootstrap() {
   await prisma.$connect();
   logger.info('Database connected');
 
-  // --- Seeded lookup table IDs (from prisma/seed.ts) ---
-  const PENDING_STATUS_ID = 1;
-  const ACTIVE_STATUS_ID = 2;
-  const DEFAULT_ROLE_ID = 1;        // VIEWER
-  const EMAIL_REGISTER_TYPE_ID = 1; // EMAIL
-
-  // Token TTLs & rate limit config
-  const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-  const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;              // 1 hour
-  const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;            // 1 hour
-  const RATE_LIMIT_MAX = 3;
-
   // --- Adapters ---
   const userRepo = new PrismaUserAdapter(prisma);
   const refreshTokenRepo = new PrismaRefreshTokenAdapter(prisma);
@@ -80,7 +68,6 @@ async function bootstrap() {
     logger,
     ENV.REFRESH_TOKEN_TTL_DAYS,
     dummyHash,
-    PENDING_STATUS_ID,
   );
   const refreshTokenUseCase = new RefreshTokenUseCase(
     refreshTokenRepo,
@@ -97,19 +84,11 @@ async function bootstrap() {
     passwordHasher,
     emailSender,
     logger,
-    PENDING_STATUS_ID,
-    DEFAULT_ROLE_ID,
-    EMAIL_REGISTER_TYPE_ID,
     `${ENV.FRONTEND_URL}/auth/verify-email`,
-    VERIFICATION_TOKEN_TTL_MS,
+    ENV.VERIFICATION_TOKEN_TTL_MS,
   );
 
-  const verifyEmailUseCase = new VerifyEmailUseCase(
-    userRepo,
-    evtRepo,
-    logger,
-    ACTIVE_STATUS_ID,
-  );
+  const verifyEmailUseCase = new VerifyEmailUseCase(userRepo, evtRepo, logger);
 
   const resendVerificationUseCase = new ResendVerificationEmailUseCase(
     userRepo,
@@ -118,9 +97,9 @@ async function bootstrap() {
     rateLimiter,
     logger,
     `${ENV.FRONTEND_URL}/auth/verify-email`,
-    VERIFICATION_TOKEN_TTL_MS,
-    RATE_LIMIT_WINDOW_MS,
-    RATE_LIMIT_MAX,
+    ENV.VERIFICATION_TOKEN_TTL_MS,
+    ENV.RATE_LIMIT_WINDOW_MS,
+    ENV.RATE_LIMIT_MAX_ATTEMPTS,
   );
 
   const forgotPasswordUseCase = new ForgotPasswordUseCase(
@@ -130,17 +109,12 @@ async function bootstrap() {
     rateLimiter,
     logger,
     `${ENV.FRONTEND_URL}/auth/reset-password`,
-    RESET_TOKEN_TTL_MS,
-    RATE_LIMIT_WINDOW_MS,
-    RATE_LIMIT_MAX,
+    ENV.RESET_TOKEN_TTL_MS,
+    ENV.RATE_LIMIT_WINDOW_MS,
+    ENV.RATE_LIMIT_MAX_ATTEMPTS,
   );
 
-  const resetPasswordUseCase = new ResetPasswordUseCase(
-    userRepo,
-    evtRepo,
-    passwordHasher,
-    logger,
-  );
+  const resetPasswordUseCase = new ResetPasswordUseCase(userRepo, evtRepo, passwordHasher, logger);
 
   // --- Controllers ---
   const authController = new AuthController(

@@ -3,15 +3,17 @@ import { uuidv7 } from 'uuidv7';
 import { User } from '@domain/user/entities/user.entity.js';
 import { EmailVerificationToken } from '@domain/auth/entities/email-verification-token.entity.js';
 import { EmailAlreadyExistsError } from '@domain/auth/errors/email-already-exists.error.js';
-import { PasswordTooWeakError } from '@domain/auth/errors/password-too-weak.error.js';
+import { Password } from '@domain/auth/value-objects/password.value-object.js';
+import { UserStatusId, UserRoleId, RegisterTypeId } from '@domain/catalog-ids.js';
 import type { IUserRepository } from '@domain/user/ports/user.repository.port.js';
 import type { IEmailVerificationTokenRepository } from '@domain/auth/ports/email-verification-token.repository.port.js';
 import type { IPasswordHasher } from '@domain/auth/ports/password-hasher.port.js';
 import type { IEmailSender } from '@domain/ports/email-sender.port.js';
 import type { ILogger } from '@domain/ports/logger.port.js';
-import type { RegisterUserCommand, RegisterUserResult } from '@application/auth/dto/register-user-auth.dto.js';
-
-const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/;
+import type {
+  RegisterUserCommand,
+  RegisterUserResult,
+} from '@application/auth/dto/register-user-auth.dto.js';
 
 export class RegisterUserUseCase {
   constructor(
@@ -20,9 +22,6 @@ export class RegisterUserUseCase {
     private readonly passwordHasher: IPasswordHasher,
     private readonly emailSender: IEmailSender,
     private readonly logger: ILogger,
-    private readonly pendingStatusId: number,
-    private readonly defaultRoleId: number,
-    private readonly emailRegisterTypeId: number,
     private readonly verificationBaseUrl: string,
     private readonly tokenTtlMs: number,
   ) {}
@@ -33,11 +32,8 @@ export class RegisterUserUseCase {
       throw new EmailAlreadyExistsError(command.email);
     }
 
-    if (!PASSWORD_REGEX.test(command.password)) {
-      throw new PasswordTooWeakError();
-    }
-
-    const passwordHash = await this.passwordHasher.hash(command.password);
+    const password = Password.create(command.password);
+    const passwordHash = await this.passwordHasher.hash(password.value);
 
     const userId = uuidv7();
     const user = User.create(
@@ -46,9 +42,9 @@ export class RegisterUserUseCase {
       passwordHash,
       command.name,
       command.lastName,
-      this.pendingStatusId,
-      this.defaultRoleId,
-      this.emailRegisterTypeId,
+      UserStatusId.PENDING,
+      UserRoleId.VIEWER,
+      RegisterTypeId.EMAIL,
     );
 
     await this.userRepo.save(user);

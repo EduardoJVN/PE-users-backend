@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  EmailVerificationToken,
-} from '@domain/auth/entities/email-verification-token.entity.js';
+import { EmailVerificationToken } from '@domain/auth/entities/email-verification-token.entity.js';
 
 const futureDate = (): Date => new Date(Date.now() + 60_000);
 const pastDate = (): Date => new Date(Date.now() - 10_000);
@@ -9,7 +7,13 @@ const pastDate = (): Date => new Date(Date.now() - 10_000);
 describe('EmailVerificationToken', () => {
   describe('create()', () => {
     it('sets usedAt to null on creation', () => {
-      const token = EmailVerificationToken.create('evt-1', 'user-1', 'hash-abc', 'VERIFY', futureDate());
+      const token = EmailVerificationToken.create(
+        'evt-1',
+        'user-1',
+        'hash-abc',
+        'VERIFY',
+        futureDate(),
+      );
       expect(token.usedAt).toBeNull();
     });
 
@@ -32,7 +36,13 @@ describe('EmailVerificationToken', () => {
     });
 
     it('supports RESET type', () => {
-      const token = EmailVerificationToken.create('evt-2', 'user-2', 'hash-xyz', 'RESET', futureDate());
+      const token = EmailVerificationToken.create(
+        'evt-2',
+        'user-2',
+        'hash-xyz',
+        'RESET',
+        futureDate(),
+      );
       expect(token.type).toBe('RESET');
     });
   });
@@ -96,7 +106,13 @@ describe('EmailVerificationToken', () => {
     });
 
     it('returns false when expiresAt is in the future', () => {
-      const token = EmailVerificationToken.create('evt-1', 'user-1', 'hash', 'VERIFY', futureDate());
+      const token = EmailVerificationToken.create(
+        'evt-1',
+        'user-1',
+        'hash',
+        'VERIFY',
+        futureDate(),
+      );
       expect(token.isExpired()).toBe(false);
     });
   });
@@ -117,7 +133,13 @@ describe('EmailVerificationToken', () => {
     });
 
     it('returns false when usedAt is null', () => {
-      const token = EmailVerificationToken.create('evt-1', 'user-1', 'hash', 'VERIFY', futureDate());
+      const token = EmailVerificationToken.create(
+        'evt-1',
+        'user-1',
+        'hash',
+        'VERIFY',
+        futureDate(),
+      );
       expect(token.isUsed()).toBe(false);
     });
   });

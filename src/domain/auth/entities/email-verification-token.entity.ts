@@ -33,7 +33,16 @@ export class EmailVerificationToken {
     createdAt: Date,
     updatedAt: Date,
   ): EmailVerificationToken {
-    return new EmailVerificationToken(id, userId, tokenHash, type, expiresAt, usedAt, createdAt, updatedAt);
+    return new EmailVerificationToken(
+      id,
+      userId,
+      tokenHash,
+      type,
+      expiresAt,
+      usedAt,
+      createdAt,
+      updatedAt,
+    );
   }
 
   isExpired(): boolean {

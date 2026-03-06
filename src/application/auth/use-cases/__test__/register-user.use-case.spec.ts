@@ -133,11 +133,8 @@ describe('RegisterUserUseCase', () => {
       passwordHasher,
       emailSender,
       logger,
-      1,   // pendingStatusId
-      1,   // defaultRoleId
-      1,   // emailRegisterTypeId
       'http://localhost:3000/auth/verify-email',
-      24 * 60 * 60 * 1000, // tokenTtlMs: 24h
+      24 * 60 * 60 * 1000,
     );
   });
 
@@ -180,19 +177,27 @@ describe('RegisterUserUseCase', () => {
   });
 
   it('throws PasswordTooWeakError when password is shorter than 8 characters', async () => {
-    await expect(useCase.execute(makeCommand({ password: 'Ab1!' }))).rejects.toThrow(PasswordTooWeakError);
+    await expect(useCase.execute(makeCommand({ password: 'Ab1!' }))).rejects.toThrow(
+      PasswordTooWeakError,
+    );
   });
 
   it('throws PasswordTooWeakError when password has no uppercase letter', async () => {
-    await expect(useCase.execute(makeCommand({ password: 'validpass1!' }))).rejects.toThrow(PasswordTooWeakError);
+    await expect(useCase.execute(makeCommand({ password: 'validpass1!' }))).rejects.toThrow(
+      PasswordTooWeakError,
+    );
   });
 
   it('throws PasswordTooWeakError when password has no number', async () => {
-    await expect(useCase.execute(makeCommand({ password: 'ValidPass!' }))).rejects.toThrow(PasswordTooWeakError);
+    await expect(useCase.execute(makeCommand({ password: 'ValidPass!' }))).rejects.toThrow(
+      PasswordTooWeakError,
+    );
   });
 
   it('throws PasswordTooWeakError when password has no special character', async () => {
-    await expect(useCase.execute(makeCommand({ password: 'ValidPass1' }))).rejects.toThrow(PasswordTooWeakError);
+    await expect(useCase.execute(makeCommand({ password: 'ValidPass1' }))).rejects.toThrow(
+      PasswordTooWeakError,
+    );
   });
 
   it('propagates error if userRepo.save() throws', async () => {

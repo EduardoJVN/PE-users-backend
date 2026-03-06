@@ -41,36 +41,118 @@ describe('User', () => {
     });
 
     it('sets createdAt and updatedAt to the same value on create', () => {
-      const user = User.create('user-1', 'alice@example.com', 'hash-abc', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID);
+      const user = User.create(
+        'user-1',
+        'alice@example.com',
+        'hash-abc',
+        'Alice',
+        'Smith',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+      );
       expect(user.createdAt.getTime()).toBe(user.updatedAt.getTime());
     });
 
     it('accepts null password for OAuth users', () => {
-      const user = User.create('user-1', 'alice@example.com', null, 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID);
+      const user = User.create(
+        'user-1',
+        'alice@example.com',
+        null,
+        'Alice',
+        'Smith',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+      );
       expect(user.password).toBeNull();
     });
 
     it('throws InvalidEmailFormatError for an email without @', () => {
-      expect(() => User.create('user-1', 'notanemail', 'hash', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID)).toThrow(InvalidEmailFormatError);
+      expect(() =>
+        User.create(
+          'user-1',
+          'notanemail',
+          'hash',
+          'Alice',
+          'Smith',
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+        ),
+      ).toThrow(InvalidEmailFormatError);
     });
 
     it('throws InvalidEmailFormatError for an email without domain', () => {
-      expect(() => User.create('user-1', 'missing@', 'hash', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID)).toThrow(InvalidEmailFormatError);
+      expect(() =>
+        User.create(
+          'user-1',
+          'missing@',
+          'hash',
+          'Alice',
+          'Smith',
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+        ),
+      ).toThrow(InvalidEmailFormatError);
     });
 
     it('throws InvalidEmailFormatError for an email without local part', () => {
-      expect(() => User.create('user-1', '@domain.com', 'hash', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID)).toThrow(InvalidEmailFormatError);
+      expect(() =>
+        User.create(
+          'user-1',
+          '@domain.com',
+          'hash',
+          'Alice',
+          'Smith',
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+        ),
+      ).toThrow(InvalidEmailFormatError);
     });
 
     it('throws InvalidEmailFormatError for an email with spaces', () => {
       expect(() =>
-        User.create('user-1', 'a b@domain.com', 'hash', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID),
+        User.create(
+          'user-1',
+          'a b@domain.com',
+          'hash',
+          'Alice',
+          'Smith',
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+        ),
       ).toThrow(InvalidEmailFormatError);
     });
 
     it('accepts various valid email formats', () => {
-      expect(() => User.create('u1', 'user.name+tag@sub.domain.com', 'h', 'A', 'B', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID)).not.toThrow();
-      expect(() => User.create('u2', 'simple@example.org', 'h', 'A', 'B', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID)).not.toThrow();
+      expect(() =>
+        User.create(
+          'u1',
+          'user.name+tag@sub.domain.com',
+          'h',
+          'A',
+          'B',
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+        ),
+      ).not.toThrow();
+      expect(() =>
+        User.create(
+          'u2',
+          'simple@example.org',
+          'h',
+          'A',
+          'B',
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+        ),
+      ).not.toThrow();
     });
   });
 
@@ -112,7 +194,21 @@ describe('User', () => {
 
     it('reconstitutes with null optional fields', () => {
       const now = new Date();
-      const user = User.reconstitute('user-1', 'alice@example.com', null, 'Alice', 'Smith', null, BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID, false, now, now, null);
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        null,
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        false,
+        now,
+        now,
+        null,
+      );
       expect(user.password).toBeNull();
       expect(user.avatarUrl).toBeNull();
       expect(user.deletedAt).toBeNull();
@@ -121,14 +217,37 @@ describe('User', () => {
     it('does NOT validate email format during reconstitution', () => {
       const now = new Date();
       expect(() =>
-        User.reconstitute('user-1', 'invalid-email', 'hash', 'Alice', 'Smith', null, BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID, false, now, now, null),
+        User.reconstitute(
+          'user-1',
+          'invalid-email',
+          'hash',
+          'Alice',
+          'Smith',
+          null,
+          BASE_STATUS_ID,
+          BASE_ROLE_ID,
+          BASE_REGISTER_TYPE_ID,
+          false,
+          now,
+          now,
+          null,
+        ),
       ).not.toThrow();
     });
   });
 
   describe('activate()', () => {
     it('returns a new User instance with isActive=true and updated statusId', () => {
-      const user = User.create('user-1', 'alice@example.com', 'hash-abc', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID);
+      const user = User.create(
+        'user-1',
+        'alice@example.com',
+        'hash-abc',
+        'Alice',
+        'Smith',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+      );
       expect(user.isActive).toBe(false);
 
       const activated = user.activate(ACTIVE_STATUS_ID);
@@ -138,7 +257,16 @@ describe('User', () => {
     });
 
     it('does not mutate the original user', () => {
-      const user = User.create('user-1', 'alice@example.com', 'hash-abc', 'Alice', 'Smith', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID);
+      const user = User.create(
+        'user-1',
+        'alice@example.com',
+        'hash-abc',
+        'Alice',
+        'Smith',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+      );
       user.activate(ACTIVE_STATUS_ID);
 
       expect(user.isActive).toBe(false);
@@ -147,7 +275,21 @@ describe('User', () => {
 
     it('preserves all other fields when activating', () => {
       const createdAt = new Date('2024-01-01');
-      const user = User.reconstitute('user-1', 'alice@example.com', 'hash', 'Alice', 'Smith', 'https://avatar.url', BASE_STATUS_ID, BASE_ROLE_ID, BASE_REGISTER_TYPE_ID, false, createdAt, createdAt, null);
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        'https://avatar.url',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        false,
+        createdAt,
+        createdAt,
+        null,
+      );
 
       const activated = user.activate(ACTIVE_STATUS_ID);
 

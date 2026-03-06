@@ -21,7 +21,9 @@ async function main() {
     // 2. Insertar Roles de Usuario con IDs fijos
     await tx.$executeRawUnsafe(`
       INSERT INTO "user_roles" (id, name, created_at, updated_at) VALUES
-      (1, 'VIEWER', NOW(), NOW()),
+      (1, 'USER', NOW(), NOW()),
+      (2, 'ADMIN', NOW(), NOW()),
+      (3, 'SUPPORT', NOW(), NOW());
     `);
 
     // 3. Insertar Estados de Usuario
@@ -40,13 +42,13 @@ async function main() {
       (3, 'FACEBOOK', NOW(), NOW());
 `);
 
-    // 5. Roles de Miembros de Empresa (Pivot Table Roles)
-    await tx.$executeRawUnsafe(`
-      INSERT INTO "company_member_roles" (id, name, created_at, updated_at) VALUES
-      (1, 'OWNER', NOW(), NOW()),
-      (3, 'EDITOR', NOW(), NOW()),
-      (4, 'VIEWER', NOW(), NOW());
-    `);
+    // // 5. Roles de Miembros de Empresa (Pivot Table Roles)
+    // await tx.$executeRawUnsafe(`
+    //   INSERT INTO "company_member_roles" (id, name, created_at, updated_at) VALUES
+    //   (1, 'OWNER', NOW(), NOW()),
+    //   (3, 'EDITOR', NOW(), NOW()),
+    //   (4, 'VIEWER', NOW(), NOW());
+    // `);
 
     console.log('✅ Catálogos insertados con IDs fijos.'); // eslint-disable-line
   });

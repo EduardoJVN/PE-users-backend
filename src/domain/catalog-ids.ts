@@ -16,7 +16,9 @@ export const UserStatusId = {
 export type UserStatusId = (typeof UserStatusId)[keyof typeof UserStatusId];
 
 export const UserRoleId = {
-  VIEWER: 1,
+  USER: 1,
+  ADMIN: 2,
+  SUPPORT: 3,
 } as const;
 
 export type UserRoleId = (typeof UserRoleId)[keyof typeof UserRoleId];
@@ -31,6 +33,7 @@ export type RegisterTypeId = (typeof RegisterTypeId)[keyof typeof RegisterTypeId
 
 export const CompanyMemberRoleId = {
   OWNER: 1,
+  ADMIN: 3,
   EDITOR: 3,
   VIEWER: 4,
 } as const;

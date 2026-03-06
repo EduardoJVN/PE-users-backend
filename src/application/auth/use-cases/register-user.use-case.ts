@@ -43,7 +43,7 @@ export class RegisterUserUseCase {
       command.name,
       command.lastName,
       UserStatusId.PENDING,
-      UserRoleId.VIEWER,
+      UserRoleId.USER,
       RegisterTypeId.EMAIL,
     );
 

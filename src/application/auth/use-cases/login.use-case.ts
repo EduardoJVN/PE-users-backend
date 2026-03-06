@@ -2,6 +2,7 @@ import { randomUUID, createHash } from 'node:crypto';
 import { uuidv7 } from 'uuidv7';
 import { RefreshToken } from '@domain/auth/entities/refresh-token.entity.js';
 import { InvalidCredentialsError } from '@domain/auth/errors/invalid-credentials.error.js';
+import { UserNotVerifiedError } from '@domain/auth/errors/user-not-verified.error.js';
 import type { IRefreshTokenRepository } from '@domain/auth/ports/refresh-token.repository.port.js';
 import type { IPasswordHasher } from '@domain/auth/ports/password-hasher.port.js';
 import type { ITokenSigner } from '@domain/auth/ports/token-signer.port.js';
@@ -18,6 +19,7 @@ export class LoginUseCase {
     private readonly logger: ILogger,
     private readonly refreshTokenTtlDays: number,
     private readonly dummyHash: string,
+    private readonly pendingStatusId: number,
   ) {}
 
   async execute(command: LoginCommand): Promise<LoginResult> {
@@ -29,9 +31,13 @@ export class LoginUseCase {
       throw new InvalidCredentialsError();
     }
 
-    const passwordMatches = await this.passwordHasher.compare(command.password, user.passwordHash);
+    const passwordMatches = await this.passwordHasher.compare(command.password, user.password ?? this.dummyHash);
     if (!passwordMatches) {
       throw new InvalidCredentialsError();
+    }
+
+    if (user.statusId === this.pendingStatusId) {
+      throw new UserNotVerifiedError();
     }
 
     const tokenId = uuidv7();

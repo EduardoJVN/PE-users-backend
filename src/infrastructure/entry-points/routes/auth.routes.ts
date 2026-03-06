@@ -56,5 +56,30 @@ export function createAuthRouter(controller: AuthController): Router {
     sendHttpResponse(res, result);
   });
 
+  router.post('/register', async (req: Request, res: Response) => {
+    const result = await controller.register(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
+  router.get('/verify-email', async (req: Request, res: Response) => {
+    const result = await controller.verifyEmail(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
+  router.post('/resend-verification', async (req: Request, res: Response) => {
+    const result = await controller.resendVerification(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
+  router.post('/forgot-password', async (req: Request, res: Response) => {
+    const result = await controller.forgotPassword(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
+  router.post('/reset-password', async (req: Request, res: Response) => {
+    const result = await controller.resetPassword(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
   return router;
 }

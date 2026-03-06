@@ -3,13 +3,25 @@ import { AuthController } from '../auth.controller.js';
 import { InvalidCredentialsError } from '@domain/auth/errors/invalid-credentials.error.js';
 import { RefreshTokenInvalidError } from '@domain/auth/errors/refresh-token-invalid.error.js';
 import { RefreshTokenExpiredError } from '@domain/auth/errors/refresh-token-expired.error.js';
+import { RateLimitExceededError } from '@domain/auth/errors/rate-limit-exceeded.error.js';
+import { EmailAlreadyExistsError } from '@domain/auth/errors/email-already-exists.error.js';
 import type { LoginUseCase } from '@application/auth/use-cases/login.use-case.js';
 import type { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case.js';
 import type { LogoutUseCase } from '@application/auth/use-cases/logout.use-case.js';
+import type { RegisterUserUseCase } from '@application/auth/use-cases/register-user.use-case.js';
+import type { VerifyEmailUseCase } from '@application/auth/use-cases/verify-email.use-case.js';
+import type { ResendVerificationEmailUseCase } from '@application/auth/use-cases/resend-verification-email.use-case.js';
+import type { ForgotPasswordUseCase } from '@application/auth/use-cases/forgot-password.use-case.js';
+import type { ResetPasswordUseCase } from '@application/auth/use-cases/reset-password.use-case.js';
 
 const mockLogin = { execute: vi.fn() };
 const mockRefresh = { execute: vi.fn() };
 const mockLogout = { execute: vi.fn() };
+const mockRegister = { execute: vi.fn() };
+const mockVerifyEmail = { execute: vi.fn() };
+const mockResendVerification = { execute: vi.fn() };
+const mockForgotPassword = { execute: vi.fn() };
+const mockResetPassword = { execute: vi.fn() };
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -20,6 +32,11 @@ describe('AuthController', () => {
       mockLogin as unknown as LoginUseCase,
       mockRefresh as unknown as RefreshTokenUseCase,
       mockLogout as unknown as LogoutUseCase,
+      mockRegister as unknown as RegisterUserUseCase,
+      mockVerifyEmail as unknown as VerifyEmailUseCase,
+      mockResendVerification as unknown as ResendVerificationEmailUseCase,
+      mockForgotPassword as unknown as ForgotPasswordUseCase,
+      mockResetPassword as unknown as ResetPasswordUseCase,
     );
   });
 
@@ -211,6 +228,183 @@ describe('AuthController', () => {
       mockLogout.execute.mockRejectedValue(new Error('Unexpected failure'));
 
       const response = await controller.logout({ cookies: { refreshToken: 'rt' } });
+
+      expect(response.status).toBe(500);
+    });
+  });
+
+  describe('register', () => {
+    const validBody = {
+      email: 'alice@example.com',
+      password: 'secret',
+      name: 'Alice',
+      lastName: 'Smith',
+    };
+
+    it('returns 201 with user data on success', async () => {
+      mockRegister.execute.mockResolvedValue({
+        id: 'user-id-1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        lastName: 'Smith',
+      });
+
+      const response = await controller.register({ body: validBody });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({
+        id: 'user-id-1',
+        email: 'alice@example.com',
+        name: 'Alice',
+        lastName: 'Smith',
+      });
+    });
+
+    it('returns 400 when body fails Zod validation without calling use case', async () => {
+      const response = await controller.register({ body: { email: 'not-an-email' } });
+
+      expect(response.status).toBe(400);
+      expect(mockRegister.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when use case throws EmailAlreadyExistsError', async () => {
+      mockRegister.execute.mockRejectedValue(new EmailAlreadyExistsError('alice@example.com'));
+
+      const response = await controller.register({ body: validBody });
+
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('returns 200 with success message on valid token', async () => {
+      mockVerifyEmail.execute.mockResolvedValue({ message: 'Email verified successfully' });
+
+      const response = await controller.verifyEmail({ query: { token: 'plaintext-token' } });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Email verified successfully' });
+      expect(mockVerifyEmail.execute).toHaveBeenCalledWith({ token: 'plaintext-token' });
+    });
+
+    it('returns 400 when token query param is missing', async () => {
+      const response = await controller.verifyEmail({ query: {} });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'Missing token query parameter' });
+      expect(mockVerifyEmail.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when query is undefined', async () => {
+      const response = await controller.verifyEmail({});
+
+      expect(response.status).toBe(400);
+      expect(mockVerifyEmail.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns error status when use case throws a domain error', async () => {
+      mockVerifyEmail.execute.mockRejectedValue(new Error('unexpected'));
+
+      const response = await controller.verifyEmail({ query: { token: 'some-token' } });
+
+      expect(response.status).toBe(500);
+    });
+  });
+
+  describe('resendVerification', () => {
+    const validBody = { userId: '123e4567-e89b-12d3-a456-426614174000' };
+
+    it('returns 200 with message on success', async () => {
+      mockResendVerification.execute.mockResolvedValue({ message: 'Verification email sent' });
+
+      const response = await controller.resendVerification({ body: validBody });
+
+      expect(response.status).toBe(200);
+      expect(mockResendVerification.execute).toHaveBeenCalledWith({
+        userId: validBody.userId,
+        rateLimitKey: `resend:userId:${validBody.userId}`,
+      });
+    });
+
+    it('returns 400 when userId is not a valid UUID', async () => {
+      const response = await controller.resendVerification({ body: { userId: 'not-a-uuid' } });
+
+      expect(response.status).toBe(400);
+      expect(mockResendVerification.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 429 when use case throws RateLimitExceededError', async () => {
+      mockResendVerification.execute.mockRejectedValue(new RateLimitExceededError(120));
+
+      const response = await controller.resendVerification({ body: validBody });
+
+      expect(response.status).toBe(429);
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('returns 200 with generic message on success (anti-enumeration)', async () => {
+      mockForgotPassword.execute.mockResolvedValue(undefined);
+
+      const response = await controller.forgotPassword({ body: { email: 'alice@example.com' } });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        message: 'If your account exists, a password reset email has been sent',
+      });
+      expect(mockForgotPassword.execute).toHaveBeenCalledWith({
+        email: 'alice@example.com',
+        rateLimitKey: 'forgot:email:alice@example.com',
+      });
+    });
+
+    it('returns 400 when email is invalid', async () => {
+      const response = await controller.forgotPassword({ body: { email: 'not-an-email' } });
+
+      expect(response.status).toBe(400);
+      expect(mockForgotPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 429 when use case throws RateLimitExceededError', async () => {
+      mockForgotPassword.execute.mockRejectedValue(new RateLimitExceededError(60));
+
+      const response = await controller.forgotPassword({ body: { email: 'alice@example.com' } });
+
+      expect(response.status).toBe(429);
+    });
+  });
+
+  describe('resetPassword', () => {
+    const validBody = { token: 'reset-token', newPassword: 'NewPass123!' };
+
+    it('returns 200 with message on success', async () => {
+      mockResetPassword.execute.mockResolvedValue({ message: 'Password reset successfully' });
+
+      const response = await controller.resetPassword({ body: validBody });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: 'Password reset successfully' });
+      expect(mockResetPassword.execute).toHaveBeenCalledWith(validBody);
+    });
+
+    it('returns 400 when token is missing', async () => {
+      const response = await controller.resetPassword({ body: { newPassword: 'NewPass123!' } });
+
+      expect(response.status).toBe(400);
+      expect(mockResetPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when newPassword is missing', async () => {
+      const response = await controller.resetPassword({ body: { token: 'some-token' } });
+
+      expect(response.status).toBe(400);
+      expect(mockResetPassword.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns error status when use case throws', async () => {
+      mockResetPassword.execute.mockRejectedValue(new Error('unexpected'));
+
+      const response = await controller.resetPassword({ body: validBody });
 
       expect(response.status).toBe(500);
     });

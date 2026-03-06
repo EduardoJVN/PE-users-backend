@@ -3,6 +3,7 @@ import { BaseController } from '@infra/entry-points/base.controller.js';
 import type { HttpResponse, ErrorResponse } from '@infra/entry-points/base.controller.js';
 import { DomainError } from '@shared/errors/domain.error.js';
 import { NotFoundError } from '@shared/errors/not-found.error.js';
+import { RateLimitExceededError } from '@domain/auth/errors/rate-limit-exceeded.error.js';
 
 class TestNotFoundError extends NotFoundError {
   constructor() {
@@ -52,6 +53,13 @@ describe('BaseController', () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ error: 'business rule violated' });
+  });
+
+  it('returns 429 when action throws RateLimitExceededError', async () => {
+    const response = await controller.run(() => Promise.reject(new RateLimitExceededError(60)));
+
+    expect(response.status).toBe(429);
+    expect(response.body).toEqual({ error: 'Rate limit exceeded. Try again in 60 seconds' });
   });
 
   it('returns 500 for unknown errors', async () => {

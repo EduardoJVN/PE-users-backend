@@ -25,6 +25,7 @@ model AdminUser {
   // Relación inversa: Empresas verificadas por este admin
   verifiedCompanies Company[]
 
+  @@index([email])
   @@map("admin_users")
 }
 

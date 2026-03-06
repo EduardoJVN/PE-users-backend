@@ -275,7 +275,9 @@ describe('AuthController', () => {
     });
 
     it('returns 400 when password has no uppercase letter', async () => {
-      const response = await controller.register({ body: { ...validBody, password: 'weakpass1!' } });
+      const response = await controller.register({
+        body: { ...validBody, password: 'weakpass1!' },
+      });
 
       expect(response.status).toBe(400);
       expect(mockRegister.execute).not.toHaveBeenCalled();

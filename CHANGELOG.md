@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1](https://github.com/EduardoJVN/PE-users-backend/compare/v1.3.0...v1.3.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* add gitguardian ignore test ([09f37b0](https://github.com/EduardoJVN/PE-users-backend/commit/09f37b01a9bf59f7ba8a0d054cbbbc5a6d397c3a))
+* change name test mock password generic ([eaf4dd3](https://github.com/EduardoJVN/PE-users-backend/commit/eaf4dd30602a6bca002f2ed7dbf525cf3ebb80ba))
+* delete secrets test ([6bc7b50](https://github.com/EduardoJVN/PE-users-backend/commit/6bc7b50573db3b50801aedee0466eea6334a209c))
+* eslint and add docs api ([fe4efa3](https://github.com/EduardoJVN/PE-users-backend/commit/fe4efa36236ff2462a0dfda97e4c80c3dfdab99e))
+
 ## [1.3.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.2.0...v1.3.0) (2026-03-06)
 
 

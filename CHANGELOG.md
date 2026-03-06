@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.2.0...v1.3.0) (2026-03-06)
+
+
+### Features
+
+* seeder config ([1f2deb7](https://github.com/EduardoJVN/PE-users-backend/commit/1f2deb79e1217642091c1c6aabccb4ffb335d83b))
+* seeder config ([f7040e3](https://github.com/EduardoJVN/PE-users-backend/commit/f7040e3b1ff146b2db60d4c29fa01a9bc34326d5))
+
 ## [1.2.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.1.0...v1.2.0) (2026-03-06)
 
 

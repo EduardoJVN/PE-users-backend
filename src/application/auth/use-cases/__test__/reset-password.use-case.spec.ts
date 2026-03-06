@@ -84,7 +84,7 @@ class MockLogger implements ILogger {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const VALID_PASSWORD = 'StrongP@ssw0rd';
+const STRONG_PASS = 'StrongP@ssw0rd';
 const PLAINTEXT_TOKEN = 'plain-test-token-abc';
 const TOKEN_HASH = createHash('sha256').update(PLAINTEXT_TOKEN).digest('hex');
 
@@ -92,7 +92,7 @@ function makeUser(id = 'user-1'): User {
   return User.reconstitute(
     id,
     'test@example.com',
-    'hashed:old-password',
+    'bcrypt:stored-hash',
     'Test',
     'User',
     null,
@@ -149,7 +149,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.seed(user);
       evtRepo.seed(makeResetToken());
 
-      const result = await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD });
+      const result = await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS });
 
       expect(result).toEqual({ message: 'Password reset successfully' });
     });
@@ -159,11 +159,11 @@ describe('ResetPasswordUseCase', () => {
       userRepo.seed(user);
       evtRepo.seed(makeResetToken());
 
-      await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD });
+      await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS });
 
-      expect(passwordHasher.hash).toHaveBeenCalledWith(VALID_PASSWORD);
+      expect(passwordHasher.hash).toHaveBeenCalledWith(STRONG_PASS);
       const updated = await userRepo.findById('user-1');
-      expect(updated?.password).toBe(`hashed:${VALID_PASSWORD}`);
+      expect(updated?.password).toBe(`hashed:${STRONG_PASS}`);
     });
 
     it('deletes the token after password is updated', async () => {
@@ -171,7 +171,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.seed(user);
       evtRepo.seed(makeResetToken());
 
-      await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD });
+      await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS });
 
       expect(evtRepo.getStore()).toHaveLength(0);
     });
@@ -181,7 +181,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.seed(user);
       evtRepo.seed(makeResetToken());
 
-      await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD });
+      await useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS });
 
       expect(logger.info).toHaveBeenCalledWith('Password reset', { userId: 'user-1' });
     });
@@ -227,7 +227,7 @@ describe('ResetPasswordUseCase', () => {
     it('throws EmailVerificationTokenInvalidError when token hash is not found', async () => {
       // evtRepo is empty
       await expect(
-        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD }),
+        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS }),
       ).rejects.toThrow(EmailVerificationTokenInvalidError);
     });
 
@@ -235,7 +235,7 @@ describe('ResetPasswordUseCase', () => {
       evtRepo.seed(makeResetToken({ type: 'VERIFY' }));
 
       await expect(
-        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD }),
+        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS }),
       ).rejects.toThrow(EmailVerificationTokenInvalidError);
     });
 
@@ -244,7 +244,7 @@ describe('ResetPasswordUseCase', () => {
       evtRepo.seed(expiredToken);
 
       await expect(
-        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD }),
+        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS }),
       ).rejects.toThrow(EmailVerificationTokenExpiredError);
     });
 
@@ -253,7 +253,7 @@ describe('ResetPasswordUseCase', () => {
       evtRepo.seed(usedToken);
 
       await expect(
-        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD }),
+        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS }),
       ).rejects.toThrow(EmailVerificationTokenInvalidError);
     });
 
@@ -262,7 +262,7 @@ describe('ResetPasswordUseCase', () => {
       evtRepo.seed(makeResetToken({ userId: 'non-existent-user' }));
 
       await expect(
-        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: VALID_PASSWORD }),
+        useCase.execute({ token: PLAINTEXT_TOKEN, newPassword: STRONG_PASS }),
       ).rejects.toThrow(EmailVerificationTokenInvalidError);
     });
   });

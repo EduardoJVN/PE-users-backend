@@ -81,13 +81,13 @@ class MockLogger implements ILogger {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const VALID_PASSWORD = 'ValidPass1!';
+const STRONG_PASS = 'ValidPass1!';
 
 function makeCommand(overrides?: Partial<RegisterUserCommand>): RegisterUserCommand {
   return {
     id: 'ignored-id',
     email: overrides?.email ?? 'user@example.com',
-    password: overrides?.password ?? VALID_PASSWORD,
+    password: overrides?.password ?? STRONG_PASS,
     name: overrides?.name ?? 'John',
     lastName: overrides?.lastName ?? 'Doe',
   };
@@ -97,7 +97,7 @@ function makeExistingUser(email: string): User {
   return User.reconstitute(
     'existing-user-id',
     email,
-    'hashed:pass',
+    'bcrypt:stored-hash',
     'Existing',
     'User',
     null,

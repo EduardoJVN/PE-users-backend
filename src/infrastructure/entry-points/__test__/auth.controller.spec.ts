@@ -48,7 +48,7 @@ describe('AuthController', () => {
       });
 
       const response = await controller.login({
-        body: { email: 'alice@example.com', password: 'secret' },
+        body: { email: 'alice@example.com', password: 'login-input' },
       });
 
       expect(response.status).toBe(200);
@@ -63,7 +63,7 @@ describe('AuthController', () => {
 
     it('returns 400 when body fails Zod validation without calling use case', async () => {
       const response = await controller.login({
-        body: { email: 'not-an-email', password: 'secret' },
+        body: { email: 'not-an-email', password: 'login-input' },
       });
 
       expect(response.status).toBe(400);
@@ -92,7 +92,7 @@ describe('AuthController', () => {
       mockLogin.execute.mockRejectedValue(new Error('Database down'));
 
       const response = await controller.login({
-        body: { email: 'alice@example.com', password: 'secret' },
+        body: { email: 'alice@example.com', password: 'login-input' },
       });
 
       // Unexpected errors are caught by handleRequest as 500, but our onError callback always returns 401

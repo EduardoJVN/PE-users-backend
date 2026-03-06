@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/EduardoJVN/PE-users-backend/compare/v1.3.1...v1.3.2) (2026-03-06)
+
+
+### Bug Fixes
+
+* user roles ([e09a5a1](https://github.com/EduardoJVN/PE-users-backend/commit/e09a5a1e51c75cab87a78b213d143f59db7dd12c))
+
 ## [1.3.1](https://github.com/EduardoJVN/PE-users-backend/compare/v1.3.0...v1.3.1) (2026-03-06)
 
 

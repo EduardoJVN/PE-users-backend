@@ -17,9 +17,10 @@ describe('env.config', () => {
     process.env.NODE_ENV = 'production';
     process.env.JWT_PRIVATE_KEY = 'my-private-key';
     process.env.JWT_PUBLIC_KEY = 'my-public-key';
-    process.env.DATABASE_URL = 'postgresql://user:pass@host:6543/db?pgbouncer=true';
-    process.env.DIRECT_URL = 'postgresql://user:pass@host:5432/db';
-    process.env.RESEND_API_KEY = 're_test_123456';
+    process.env.DATABASE_URL =
+      'postgresql://testuser:testpass@localhost:6543/testdb?pgbouncer=true';
+    process.env.DIRECT_URL = 'postgresql://testuser:testpass@localhost:5432/testdb';
+    process.env.RESEND_API_KEY = 'resend-placeholder-key-for-tests';
     process.env.RESEND_FROM_EMAIL = 'no-reply@example.com';
     process.env.FRONTEND_URL = 'http://localhost:3000';
   };
@@ -38,8 +39,10 @@ describe('env.config', () => {
 
     const { ENV } = await import('@infra/config/env.config.js');
 
-    expect(ENV.DATABASE_URL).toBe('postgresql://user:pass@host:6543/db?pgbouncer=true');
-    expect(ENV.DIRECT_URL).toBe('postgresql://user:pass@host:5432/db');
+    expect(ENV.DATABASE_URL).toBe(
+      'postgresql://testuser:testpass@localhost:6543/testdb?pgbouncer=true',
+    );
+    expect(ENV.DIRECT_URL).toBe('postgresql://testuser:testpass@localhost:5432/testdb');
   });
 
   it('throws when JWT_PRIVATE_KEY is missing in non-test env', async () => {
@@ -83,7 +86,7 @@ describe('env.config', () => {
 
     const { ENV } = await import('@infra/config/env.config.js');
 
-    expect(ENV.RESEND_API_KEY).toBe('re_test_123456');
+    expect(ENV.RESEND_API_KEY).toBe('resend-placeholder-key-for-tests');
     expect(ENV.RESEND_FROM_EMAIL).toBe('no-reply@example.com');
   });
 

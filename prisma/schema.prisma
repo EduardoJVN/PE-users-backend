@@ -6,28 +6,237 @@ datasource db {
   provider = "postgresql"
 }
 
+// --- ENUMS ---
+
+enum EmailVerificationStatus {
+  VERIFY
+  RESET
+}
+
+// --- ADMIN & STAFF ---
+
+model AdminUser {
+  id        String    @id  @db.Uuid
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  // Relación inversa: Empresas verificadas por este admin
+  verifiedCompanies Company[]
+
+  @@map("admin_users")
+}
+
+// --- USER LOOKUP TABLES (CATALOGS) ---
+
+model UserStatus {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("user_status")
+}
+
+model RegisterType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("register_types")
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("user_roles")
+}
+
+// --- CORE: USERS ---
+
 model User {
-  id           String   @id @db.Uuid
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             String    @id  @db.Uuid
+  email          String    @unique
+  password       String?
+  googleId       String?   @unique @map("google_id")
+  name           String
+  lastName       String    @map("last_name")
+  avatarUrl      String?   @map("avatar_url")
+  
+  statusId       Int       @map("status_id")
+  status         UserStatus @relation(fields: [statusId], references: [id])
 
-  refreshTokens RefreshToken[]
+  roleId         Int       @map("role_id")
+  role           UserRole   @relation(fields: [roleId], references: [id])
 
+  registerTypeId Int       @map("register_type_id")
+  registerType   RegisterType @relation(fields: [registerTypeId], references: [id])
+
+  isActive       Boolean   @default(false) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  // Relaciones
+  refreshTokens           RefreshToken[]
+  emailVerificationToken  EmailVerificationToken?
+  ownedCompanies          Company[]               @relation("CompanyOwner")
+  memberships             CompanyMember[]         @relation("MemberUser")
+  
+  // Relaciones para el flujo de invitaciones en CompanyMember
+  invitationsSent         CompanyMember[]         @relation("InvitedBy")
+  acceptancesHandled      CompanyMember[]         @relation("AcceptedBy")
+
+  @@index([email])
   @@map("users")
 }
 
-model RefreshToken {
-  id        String    @id @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  tokenHash String    @map("token_hash")
-  expiresAt DateTime  @map("expires_at")
-  usedAt    DateTime? @map("used_at")
-  createdAt DateTime  @default(now()) @map("created_at")
+// --- AUTHENTICATION ---
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model EmailVerificationToken {
+  id         String                  @id  @db.Uuid
+  userId     String                  @unique @map("user_id") @db.Uuid
+  user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String                  @map("token_hash")
+  type       EmailVerificationStatus
+  expiresAt  DateTime                @map("expires_at")
+  usedAt     DateTime?               @map("used_at")
+  createdAt  DateTime                @default(now()) @map("created_at")
+  updatedAt  DateTime                @updatedAt @map("updated_at")
+
+  @@index([tokenHash])
+  @@map("email_verification_tokens")
+}
+
+model RefreshToken {
+  id         String    @id  @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
   @@index([tokenHash])
   @@map("refresh_tokens")
+}
+
+// --- COMPANIES & INDUSTRIES ---
+
+model IndustryType {
+  id        Int                @id @default(autoincrement())
+  name      String             @unique
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+  companies CompanySectorMap[]
+
+  @@map("industry_types")
+}
+
+model CompanyStatus {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  companies Company[]
+
+  @@map("company_status")
+}
+
+model Company {
+  id          String   @id  @db.Uuid
+  ownerId     String   @map("owner_id") @db.Uuid
+  owner       User     @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?  @db.Text
+  logoUrl     String?  @map("logo_url")
+
+  statusId    Int      @map("status_id")
+  status      CompanyStatus @relation(fields: [statusId], references: [id])
+
+  isActive    Boolean  @default(true) @map("is_active")
+  isVerified  Boolean  @default(false) @map("is_verified")
+  verifiedAt  DateTime? @map("verified_at")
+  verifiedBy  String?   @map("verified_by") @db.Uuid
+  verifiedByAdmin AdminUser? @relation(fields: [verifiedBy], references: [id])
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  // Relaciones
+  sectors     CompanySectorMap[]
+  members     CompanyMember[]
+
+  @@index([name])
+  @@map("companies")
+}
+
+// Relación N:N entre Company e IndustryType
+model CompanySectorMap {
+  companyId String       @map("company_id") @db.Uuid
+  sectorId  Int          @map("sector_id")
+  company   Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sector    IndustryType @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, sectorId])
+  @@map("company_sector_maps")
+}
+
+// --- COMPANY MEMBERSHIP (PIVOT TABLE) ---
+
+model CompanyMemberRole {
+  id        Int             @id @default(autoincrement())
+  name      String          @unique
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  members   CompanyMember[]
+
+  @@map("company_member_roles")
+}
+
+model CompanyMemberStatus {
+  id        Int             @id @default(autoincrement())
+  name      String          @unique
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  members   CompanyMember[]
+
+  @@map("company_member_status")
+}
+
+model CompanyMember {
+  id        String  @id  @db.Uuid
+  
+  companyId String  @map("company_id") @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  userId    String  @map("user_id") @db.Uuid
+  user      User    @relation("MemberUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  roleId    Int     @map("role_id")
+  role      CompanyMemberRole @relation(fields: [roleId], references: [id])
+
+  statusId  Int     @map("status_id")
+  status    CompanyMemberStatus @relation(fields: [statusId], references: [id])
+
+  // Seguimiento de invitación
+  invitedAt DateTime? @default(now()) @map("invited_at")
+  invitedBy String?   @map("invited_by") @db.Uuid
+  inviter   User?     @relation("InvitedBy", fields: [invitedBy], references: [id])
+
+  acceptedAt DateTime? @map("accepted_at")
+  acceptedBy String?    @map("accepted_by") @db.Uuid
+  acceptor   User?      @relation("AcceptedBy", fields: [acceptedBy], references: [id])
+
+  @@map("company_members")
 }

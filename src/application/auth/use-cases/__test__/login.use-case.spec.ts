@@ -9,6 +9,7 @@ import type { ILogger } from '@domain/ports/logger.port.js';
 import { User } from '@domain/user/entities/user.entity.js';
 import { RefreshToken } from '@domain/auth/entities/refresh-token.entity.js';
 import { InvalidCredentialsError } from '@domain/auth/errors/invalid-credentials.error.js';
+import { UserNotVerifiedError } from '@domain/auth/errors/user-not-verified.error.js';
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -101,13 +102,21 @@ class MockLogger implements ILogger {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function makeUser(overrides?: Partial<{ id: string; email: string; passwordHash: string }>): User {
+function makeUser(overrides?: Partial<{ id: string; email: string; password: string }>): User {
   return User.reconstitute(
     overrides?.id ?? 'user-1',
     overrides?.email ?? 'test@example.com',
-    overrides?.passwordHash ?? 'hashed:correct-password',
+    overrides?.password ?? 'hashed:correct-password',
+    'Test',
+    'User',
+    null,
+    2, // statusId 2 = active (pendingStatusId is 1)
+    1,
+    1,
+    true,
     new Date('2024-01-01'),
     new Date('2024-01-01'),
+    null,
   );
 }
 
@@ -224,6 +233,31 @@ describe('LoginUseCase', () => {
     await expect(
       useCase.execute({ email: 'test@example.com', password: 'wrong-password' }),
     ).rejects.toThrow(InvalidCredentialsError);
+  });
+
+  it('throws UserNotVerifiedError when user is pending verification', async () => {
+    // statusId 1 matches pendingStatusId passed to the use case constructor
+    const pendingUser = User.reconstitute(
+      'user-pending',
+      'pending@example.com',
+      'hashed:correct-password',
+      'Pending',
+      'User',
+      null,
+      1, // statusId === pendingStatusId → not yet verified
+      1,
+      1,
+      false,
+      new Date('2024-01-01'),
+      new Date('2024-01-01'),
+      null,
+    );
+    userRepo.seed(pendingUser);
+    passwordHasher.compare.mockResolvedValue(true);
+
+    await expect(
+      useCase.execute({ email: 'pending@example.com', password: 'correct-password' }),
+    ).rejects.toThrow(UserNotVerifiedError);
   });
 
   it('does not save a RefreshToken when credentials are invalid', async () => {

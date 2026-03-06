@@ -25,9 +25,17 @@ export class PrismaUserAdapter implements IUserRepository {
       data: {
         id: entity.id,
         email: entity.email,
-        passwordHash: entity.passwordHash,
+        password: entity.password,
+        name: entity.name,
+        lastName: entity.lastName,
+        avatarUrl: entity.avatarUrl,
+        statusId: entity.statusId,
+        roleId: entity.roleId,
+        registerTypeId: entity.registerTypeId,
+        isActive: entity.isActive,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
+        deletedAt: entity.deletedAt,
       },
     });
   }
@@ -37,8 +45,16 @@ export class PrismaUserAdapter implements IUserRepository {
       where: { id: entity.id },
       data: {
         email: entity.email,
-        passwordHash: entity.passwordHash,
+        password: entity.password,
+        name: entity.name,
+        lastName: entity.lastName,
+        avatarUrl: entity.avatarUrl,
+        statusId: entity.statusId,
+        roleId: entity.roleId,
+        registerTypeId: entity.registerTypeId,
+        isActive: entity.isActive,
         updatedAt: entity.updatedAt,
+        deletedAt: entity.deletedAt,
       },
     });
   }
@@ -51,9 +67,31 @@ export class PrismaUserAdapter implements IUserRepository {
 function toEntity(row: {
   id: string;
   email: string;
-  passwordHash: string;
+  password: string | null;
+  name: string;
+  lastName: string;
+  avatarUrl: string | null;
+  statusId: number;
+  roleId: number;
+  registerTypeId: number;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }): User {
-  return User.reconstitute(row.id, row.email, row.passwordHash, row.createdAt, row.updatedAt);
+  return User.reconstitute(
+    row.id,
+    row.email,
+    row.password,
+    row.name,
+    row.lastName,
+    row.avatarUrl,
+    row.statusId,
+    row.roleId,
+    row.registerTypeId,
+    row.isActive,
+    row.createdAt,
+    row.updatedAt,
+    row.deletedAt,
+  );
 }

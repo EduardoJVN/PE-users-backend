@@ -12,6 +12,14 @@ import { JwtTokenSignerAdapter } from '@infra/adapters/jwt-token-signer.adapter.
 import { LoginUseCase } from '@application/auth/use-cases/login.use-case.js';
 import { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case.js';
 import { LogoutUseCase } from '@application/auth/use-cases/logout.use-case.js';
+import { RegisterUserUseCase } from '@application/auth/use-cases/register-user.use-case.js';
+import { VerifyEmailUseCase } from '@application/auth/use-cases/verify-email.use-case.js';
+import { ResendVerificationEmailUseCase } from '@application/auth/use-cases/resend-verification-email.use-case.js';
+import { ForgotPasswordUseCase } from '@application/auth/use-cases/forgot-password.use-case.js';
+import { ResetPasswordUseCase } from '@application/auth/use-cases/reset-password.use-case.js';
+import { PrismaEmailVerificationTokenAdapter } from '@infra/adapters/prisma-email-verification-token.adapter.js';
+import { ResendEmailAdapter } from '@infra/adapters/resend-email.adapter.js';
+import { InMemoryRateLimiterAdapter } from '@infra/adapters/in-memory-rate-limiter.adapter.js';
 import { AuthController } from '@infra/entry-points/auth.controller.js';
 import { createServer } from '@infra/entry-points/server.js';
 
@@ -44,6 +52,11 @@ async function bootstrap() {
     ENV.JWT_PUBLIC_KEY.replace(/\\n/g, '\n'),
   );
 
+  // --- New adapters ---
+  const evtRepo = new PrismaEmailVerificationTokenAdapter(prisma);
+  const emailSender = new ResendEmailAdapter(ENV.RESEND_API_KEY, ENV.RESEND_FROM_EMAIL);
+  const rateLimiter = new InMemoryRateLimiterAdapter();
+
   // --- Use cases ---
   const dummyHash = await passwordHasher.hash(randomUUID());
 
@@ -65,8 +78,55 @@ async function bootstrap() {
   );
   const logoutUseCase = new LogoutUseCase(refreshTokenRepo, tokenBlacklist, logger);
 
+  const registerUserUseCase = new RegisterUserUseCase(
+    userRepo,
+    evtRepo,
+    passwordHasher,
+    emailSender,
+    logger,
+    `${ENV.FRONTEND_URL}/auth/verify-email`,
+    ENV.VERIFICATION_TOKEN_TTL_MS,
+  );
+
+  const verifyEmailUseCase = new VerifyEmailUseCase(userRepo, evtRepo, logger);
+
+  const resendVerificationUseCase = new ResendVerificationEmailUseCase(
+    userRepo,
+    evtRepo,
+    emailSender,
+    rateLimiter,
+    logger,
+    `${ENV.FRONTEND_URL}/auth/verify-email`,
+    ENV.VERIFICATION_TOKEN_TTL_MS,
+    ENV.RATE_LIMIT_WINDOW_MS,
+    ENV.RATE_LIMIT_MAX_ATTEMPTS,
+  );
+
+  const forgotPasswordUseCase = new ForgotPasswordUseCase(
+    userRepo,
+    evtRepo,
+    emailSender,
+    rateLimiter,
+    logger,
+    `${ENV.FRONTEND_URL}/auth/reset-password`,
+    ENV.RESET_TOKEN_TTL_MS,
+    ENV.RATE_LIMIT_WINDOW_MS,
+    ENV.RATE_LIMIT_MAX_ATTEMPTS,
+  );
+
+  const resetPasswordUseCase = new ResetPasswordUseCase(userRepo, evtRepo, passwordHasher, logger);
+
   // --- Controllers ---
-  const authController = new AuthController(loginUseCase, refreshTokenUseCase, logoutUseCase);
+  const authController = new AuthController(
+    loginUseCase,
+    refreshTokenUseCase,
+    logoutUseCase,
+    registerUserUseCase,
+    verifyEmailUseCase,
+    resendVerificationUseCase,
+    forgotPasswordUseCase,
+    resetPasswordUseCase,
+  );
 
   // --- Server ---
   const app = createServer(authController, errorReporter);

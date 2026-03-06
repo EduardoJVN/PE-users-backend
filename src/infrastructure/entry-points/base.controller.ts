@@ -1,5 +1,6 @@
 import { DomainError } from '@shared/errors/domain.error.js';
 import { NotFoundError } from '@shared/errors/not-found.error.js';
+import { RateLimitExceededError } from '@domain/auth/errors/rate-limit-exceeded.error.js';
 
 export interface HttpRequest {
   body?: unknown;
@@ -39,7 +40,9 @@ export abstract class BaseController {
       const result = await action();
       return onSuccess(result);
     } catch (error) {
-      if (error instanceof NotFoundError) {
+      if (error instanceof RateLimitExceededError) {
+        return onError({ status: 429, message: error.message });
+      } else if (error instanceof NotFoundError) {
         return onError({ status: 404, message: error.message });
       } else if (error instanceof DomainError) {
         return onError({ status: 400, message: error.message });

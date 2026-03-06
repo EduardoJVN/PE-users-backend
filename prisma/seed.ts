@@ -8,7 +8,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('--- Iniciando Seed con SQL Nativo ---');
+  console.log('--- Iniciando Seed con SQL Nativo ---'); // eslint-disable-line
 
   // Usamos una transacción para asegurarnos de que todo se inserte o nada
   await prisma.$transaction(async (tx) => {
@@ -48,7 +48,7 @@ async function main() {
       (4, 'VIEWER', NOW(), NOW());
     `);
 
-    console.log('✅ Catálogos insertados con IDs fijos.');
+    console.log('✅ Catálogos insertados con IDs fijos.'); // eslint-disable-line
   });
 }
 

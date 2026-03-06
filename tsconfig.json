@@ -29,6 +29,14 @@
       ".prisma/client/*": ["node_modules/.prisma/client/*"]
     }
   },
-  "include": ["src/**/*", "tests/**/*", "eslint.config.js", "vitest.config.ts", "scripts/**/*.js","commitlint.config.cjs"],
+  "include": [
+    "src/**/*",
+    "tests/**/*",
+    "eslint.config.js",
+    "vitest.config.ts",
+    "scripts/**/*.js",
+    "commitlint.config.cjs",
+    "prisma/seed.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

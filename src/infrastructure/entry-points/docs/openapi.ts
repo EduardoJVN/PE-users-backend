@@ -4,7 +4,7 @@ export const openApiSpec = {
     title: 'PE Users API',
     version: '1.0.0',
     description:
-      'Authentication API for the Plataforma Emprendedores users service. Provides JWT-based auth, email verification, and password reset.',
+      'Authentication API for the Plataforma Emprendedores users service. Provides JWT-based auth (access + refresh token), email verification, password reset, and Google OAuth 2.0.\n\nGoogle OAuth flow: GET /auth/google/url returns the authorization URL → frontend redirects user → Google redirects back to frontend with ?code → frontend POSTs code to /auth/google/callback.',
   },
   servers: [
     {

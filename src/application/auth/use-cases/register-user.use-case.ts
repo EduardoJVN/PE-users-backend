@@ -42,6 +42,7 @@ export class RegisterUserUseCase {
       passwordHash,
       command.name,
       command.lastName,
+      null,
       UserStatusId.PENDING,
       UserRoleId.USER,
       RegisterTypeId.EMAIL,

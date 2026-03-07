@@ -24,6 +24,9 @@ const EnvSchema = z.object({
   RESET_TOKEN_TTL_MS: z.coerce.number().int().positive().default(3_600_000), // 1h
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(3_600_000), // 1h
   RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(3),
+  GOOGLE_CLIENT_ID: isTest ? z.string().default('') : z.string().min(1),
+  GOOGLE_CLIENT_SECRET: isTest ? z.string().default('') : z.string().min(1),
+  GOOGLE_CALLBACK_URL: isTest ? z.string().default('') : z.string().url(),
 });
 
 const result = EnvSchema.safeParse(process.env);
@@ -51,4 +54,7 @@ export const ENV = {
   RESET_TOKEN_TTL_MS: result.data.RESET_TOKEN_TTL_MS,
   RATE_LIMIT_WINDOW_MS: result.data.RATE_LIMIT_WINDOW_MS,
   RATE_LIMIT_MAX_ATTEMPTS: result.data.RATE_LIMIT_MAX_ATTEMPTS,
+  GOOGLE_CLIENT_ID: result.data.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: result.data.GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL: result.data.GOOGLE_CALLBACK_URL,
 };

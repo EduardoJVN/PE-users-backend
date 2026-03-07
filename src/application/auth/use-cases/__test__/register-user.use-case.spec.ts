@@ -28,6 +28,10 @@ class MockUserRepository implements IUserRepository {
     return this.store.find((u) => u.email === email) ?? null;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.store.find((u) => u.googleId === googleId) ?? null;
+  }
+
   async save(entity: User): Promise<void> {
     this.store.push(entity);
   }
@@ -104,6 +108,7 @@ function makeExistingUser(email: string): User {
     1,
     1,
     1,
+    null,
     false,
     new Date('2024-01-01'),
     new Date('2024-01-01'),

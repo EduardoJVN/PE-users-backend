@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { User } from '@domain/user/entities/user.entity.js';
 import { InvalidEmailFormatError } from '@domain/user/errors/invalid-email-format.error.js';
+import { InvalidGoogleIdError } from '@domain/auth/errors/invalid-google-id.error.js';
 
 const BASE_STATUS_ID = 1;
 const ACTIVE_STATUS_ID = 2;
@@ -17,6 +18,7 @@ describe('User', () => {
         'hash-abc',
         'Alice',
         'Smith',
+        null,
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
@@ -31,6 +33,7 @@ describe('User', () => {
       expect(user.statusId).toBe(BASE_STATUS_ID);
       expect(user.roleId).toBe(BASE_ROLE_ID);
       expect(user.registerTypeId).toBe(BASE_REGISTER_TYPE_ID);
+      expect(user.googleId).toBeNull();
       expect(user.isActive).toBe(false);
       expect(user.avatarUrl).toBeNull();
       expect(user.deletedAt).toBeNull();
@@ -47,6 +50,7 @@ describe('User', () => {
         'hash-abc',
         'Alice',
         'Smith',
+        null,
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
@@ -61,11 +65,27 @@ describe('User', () => {
         null,
         'Alice',
         'Smith',
+        null,
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
       );
       expect(user.password).toBeNull();
+    });
+
+    it('stores googleId when provided', () => {
+      const user = User.create(
+        'user-1',
+        'alice@example.com',
+        null,
+        'Alice',
+        'Smith',
+        'google-123',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+      );
+      expect(user.googleId).toBe('google-123');
     });
 
     it('throws InvalidEmailFormatError for an email without @', () => {
@@ -76,6 +96,7 @@ describe('User', () => {
           'hash',
           'Alice',
           'Smith',
+          null,
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
@@ -91,6 +112,7 @@ describe('User', () => {
           'hash',
           'Alice',
           'Smith',
+          null,
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
@@ -106,6 +128,7 @@ describe('User', () => {
           'hash',
           'Alice',
           'Smith',
+          null,
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
@@ -121,6 +144,7 @@ describe('User', () => {
           'hash',
           'Alice',
           'Smith',
+          null,
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
@@ -136,6 +160,7 @@ describe('User', () => {
           'h',
           'A',
           'B',
+          null,
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
@@ -148,6 +173,7 @@ describe('User', () => {
           'h',
           'A',
           'B',
+          null,
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
@@ -171,6 +197,7 @@ describe('User', () => {
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
+        null,
         true,
         createdAt,
         updatedAt,
@@ -186,6 +213,7 @@ describe('User', () => {
       expect(user.statusId).toBe(BASE_STATUS_ID);
       expect(user.roleId).toBe(BASE_ROLE_ID);
       expect(user.registerTypeId).toBe(BASE_REGISTER_TYPE_ID);
+      expect(user.googleId).toBeNull();
       expect(user.isActive).toBe(true);
       expect(user.createdAt).toBe(createdAt);
       expect(user.updatedAt).toBe(updatedAt);
@@ -204,6 +232,7 @@ describe('User', () => {
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
+        null,
         false,
         now,
         now,
@@ -211,7 +240,29 @@ describe('User', () => {
       );
       expect(user.password).toBeNull();
       expect(user.avatarUrl).toBeNull();
+      expect(user.googleId).toBeNull();
       expect(user.deletedAt).toBeNull();
+    });
+
+    it('reconstitutes with a googleId', () => {
+      const now = new Date();
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        null,
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        'google-456',
+        false,
+        now,
+        now,
+        null,
+      );
+      expect(user.googleId).toBe('google-456');
     });
 
     it('does NOT validate email format during reconstitution', () => {
@@ -227,6 +278,7 @@ describe('User', () => {
           BASE_STATUS_ID,
           BASE_ROLE_ID,
           BASE_REGISTER_TYPE_ID,
+          null,
           false,
           now,
           now,
@@ -244,6 +296,7 @@ describe('User', () => {
         'hash-abc',
         'Alice',
         'Smith',
+        null,
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
@@ -263,6 +316,7 @@ describe('User', () => {
         'hash-abc',
         'Alice',
         'Smith',
+        null,
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
@@ -285,6 +339,7 @@ describe('User', () => {
         BASE_STATUS_ID,
         BASE_ROLE_ID,
         BASE_REGISTER_TYPE_ID,
+        'google-789',
         false,
         createdAt,
         createdAt,
@@ -301,8 +356,165 @@ describe('User', () => {
       expect(activated.avatarUrl).toBe('https://avatar.url');
       expect(activated.roleId).toBe(BASE_ROLE_ID);
       expect(activated.registerTypeId).toBe(BASE_REGISTER_TYPE_ID);
+      expect(activated.googleId).toBe('google-789');
       expect(activated.createdAt).toBe(createdAt);
       expect(activated.deletedAt).toBeNull();
+    });
+  });
+
+  describe('linkGoogle()', () => {
+    it('returns a new User with the given googleId', () => {
+      const now = new Date('2024-01-01');
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        null,
+        true,
+        now,
+        now,
+        null,
+      );
+
+      const linked = user.linkGoogle('google-abc');
+
+      expect(linked.googleId).toBe('google-abc');
+    });
+
+    it('preserves all existing fields except googleId and updatedAt', () => {
+      const createdAt = new Date('2024-01-01');
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        'https://avatar.url',
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        null,
+        true,
+        createdAt,
+        createdAt,
+        null,
+      );
+
+      const linked = user.linkGoogle('google-abc');
+
+      expect(linked.id).toBe('user-1');
+      expect(linked.email).toBe('alice@example.com');
+      expect(linked.password).toBe('hash');
+      expect(linked.name).toBe('Alice');
+      expect(linked.lastName).toBe('Smith');
+      expect(linked.avatarUrl).toBe('https://avatar.url');
+      expect(linked.statusId).toBe(BASE_STATUS_ID);
+      expect(linked.roleId).toBe(BASE_ROLE_ID);
+      expect(linked.registerTypeId).toBe(BASE_REGISTER_TYPE_ID);
+      expect(linked.isActive).toBe(true);
+      expect(linked.createdAt).toBe(createdAt);
+      expect(linked.deletedAt).toBeNull();
+    });
+
+    it('does not mutate the original user', () => {
+      const now = new Date('2024-01-01');
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        null,
+        true,
+        now,
+        now,
+        null,
+      );
+
+      user.linkGoogle('google-abc');
+
+      expect(user.googleId).toBeNull();
+    });
+
+    it('throws InvalidGoogleIdError when googleId is an empty string', () => {
+      const now = new Date('2024-01-01');
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        null,
+        true,
+        now,
+        now,
+        null,
+      );
+
+      expect(() => user.linkGoogle('')).toThrow(InvalidGoogleIdError);
+    });
+
+    it('throws InvalidGoogleIdError when googleId is whitespace-only', () => {
+      const now = new Date('2024-01-01');
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        null,
+        true,
+        now,
+        now,
+        null,
+      );
+
+      expect(() => user.linkGoogle('   ')).toThrow(InvalidGoogleIdError);
+    });
+
+    it('updates updatedAt to a more recent time', () => {
+      const createdAt = new Date('2024-01-01');
+      const user = User.reconstitute(
+        'user-1',
+        'alice@example.com',
+        'hash',
+        'Alice',
+        'Smith',
+        null,
+        BASE_STATUS_ID,
+        BASE_ROLE_ID,
+        BASE_REGISTER_TYPE_ID,
+        null,
+        true,
+        createdAt,
+        createdAt,
+        null,
+      );
+
+      const before = new Date();
+      const linked = user.linkGoogle('google-abc');
+      const after = new Date();
+
+      expect(linked.updatedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(linked.updatedAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
   });
 });

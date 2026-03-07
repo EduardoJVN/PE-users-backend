@@ -28,6 +28,10 @@ class MockUserRepository implements IUserRepository {
     return this.store.find((u) => u.email === email) ?? null;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.store.find((u) => u.googleId === googleId) ?? null;
+  }
+
   async save(entity: User): Promise<void> {
     this.store.push(entity);
   }
@@ -113,6 +117,7 @@ function makeUser(overrides?: Partial<{ id: string; email: string; password: str
     2, // statusId 2 = active (pendingStatusId is 1)
     1,
     1,
+    null,
     true,
     new Date('2024-01-01'),
     new Date('2024-01-01'),
@@ -247,6 +252,7 @@ describe('LoginUseCase', () => {
       1, // statusId === pendingStatusId → not yet verified
       1,
       1,
+      null,
       false,
       new Date('2024-01-01'),
       new Date('2024-01-01'),

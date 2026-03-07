@@ -20,6 +20,11 @@ export class PrismaUserAdapter implements IUserRepository {
     return row ? toEntity(row) : null;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    const row = await this.db.user.findUnique({ where: { googleId } });
+    return row ? toEntity(row) : null;
+  }
+
   async save(entity: User): Promise<void> {
     await this.db.user.create({
       data: {
@@ -32,6 +37,7 @@ export class PrismaUserAdapter implements IUserRepository {
         statusId: entity.statusId,
         roleId: entity.roleId,
         registerTypeId: entity.registerTypeId,
+        googleId: entity.googleId,
         isActive: entity.isActive,
         createdAt: entity.createdAt,
         updatedAt: entity.updatedAt,
@@ -52,6 +58,7 @@ export class PrismaUserAdapter implements IUserRepository {
         statusId: entity.statusId,
         roleId: entity.roleId,
         registerTypeId: entity.registerTypeId,
+        googleId: entity.googleId,
         isActive: entity.isActive,
         updatedAt: entity.updatedAt,
         deletedAt: entity.deletedAt,
@@ -74,6 +81,7 @@ function toEntity(row: {
   statusId: number;
   roleId: number;
   registerTypeId: number;
+  googleId: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -89,6 +97,7 @@ function toEntity(row: {
     row.statusId,
     row.roleId,
     row.registerTypeId,
+    row.googleId,
     row.isActive,
     row.createdAt,
     row.updatedAt,

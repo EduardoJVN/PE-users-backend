@@ -60,6 +60,7 @@ export class ResetPasswordUseCase {
       user.statusId,
       user.roleId,
       user.registerTypeId,
+      user.googleId,
       user.isActive,
       user.createdAt,
       new Date(),

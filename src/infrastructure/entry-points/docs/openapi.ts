@@ -337,6 +337,94 @@ export const openApiSpec = {
         },
       },
     },
+    '/auth/google/url': {
+      get: {
+        operationId: 'googleUrl',
+        summary: 'Get Google OAuth authorization URL',
+        description:
+          'Returns the Google OAuth 2.0 authorization URL. The frontend redirects the user to this URL to initiate the consent flow.',
+        tags: ['Auth'],
+        responses: {
+          '200': {
+            description: 'Authorization URL generated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    url: {
+                      type: 'string',
+                      format: 'uri',
+                      example: 'https://accounts.google.com/o/oauth2/auth?...',
+                    },
+                  },
+                  required: ['url'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/auth/google/callback': {
+      post: {
+        operationId: 'googleCallback',
+        summary: 'Google OAuth callback',
+        description:
+          'Receives the authorization code from the frontend (after Google redirect), exchanges it for a Google profile, and creates or links the user. Returns an access token and sets an HttpOnly refresh token cookie.',
+        tags: ['Auth'],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  code: {
+                    type: 'string',
+                    description: 'Authorization code returned by Google after user consent.',
+                  },
+                },
+                required: ['code'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'OAuth login successful',
+            headers: {
+              'Set-Cookie': {
+                description:
+                  'HttpOnly refresh token cookie. Format: refreshToken=<value>; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000; Path=/',
+                schema: { type: 'string' },
+              },
+            },
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/GoogleCallbackResponse' },
+              },
+            },
+          },
+          '400': {
+            description: 'Missing or invalid authorization code',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/ErrorResponse' },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -442,6 +530,23 @@ export const openApiSpec = {
             type: 'string',
             description: 'Short-lived JWT access token.',
             example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          },
+        },
+      },
+      GoogleCallbackResponse: {
+        type: 'object',
+        required: ['accessToken', 'userId'],
+        properties: {
+          accessToken: {
+            type: 'string',
+            description: 'Short-lived JWT access token.',
+            example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+          },
+          userId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'The authenticated user ID.',
+            example: '01932f4a-...',
           },
         },
       },

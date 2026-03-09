@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryUserAdapter } from '@infra/adapters/in-memory-user.adapter.js';
 import { User } from '@domain/user/entities/user.entity.js';
 
-const makeUser = (id: string, email: string): User =>
+const makeUser = (id: string, email: string, googleId: string | null = null): User =>
   User.reconstitute(
     id,
     email,
@@ -13,6 +13,7 @@ const makeUser = (id: string, email: string): User =>
     1,
     1,
     1,
+    googleId,
     true,
     new Date('2024-01-01'),
     new Date('2024-01-01'),
@@ -71,6 +72,31 @@ describe('InMemoryUserAdapter', () => {
     });
   });
 
+  describe('findByGoogleId', () => {
+    it('returns the user matching the googleId', async () => {
+      await adapter.save(makeUser('u-1', 'alice@example.com', 'google-123'));
+      await adapter.save(makeUser('u-2', 'bob@example.com', 'google-456'));
+
+      const found = await adapter.findByGoogleId('google-456');
+      expect(found).not.toBeNull();
+      expect(found!.id).toBe('u-2');
+    });
+
+    it('returns null when no user matches the googleId', async () => {
+      await adapter.save(makeUser('u-1', 'alice@example.com', 'google-123'));
+
+      const found = await adapter.findByGoogleId('google-999');
+      expect(found).toBeNull();
+    });
+
+    it('returns null when googleId is null on all users', async () => {
+      await adapter.save(makeUser('u-1', 'alice@example.com'));
+
+      const found = await adapter.findByGoogleId('google-123');
+      expect(found).toBeNull();
+    });
+  });
+
   describe('findAll', () => {
     it('returns empty array when store is empty', async () => {
       const users = await adapter.findAll();
@@ -100,6 +126,7 @@ describe('InMemoryUserAdapter', () => {
         1,
         1,
         1,
+        null,
         true,
         new Date(),
         new Date(),

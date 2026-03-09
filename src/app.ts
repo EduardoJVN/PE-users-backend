@@ -20,6 +20,8 @@ import { ResetPasswordUseCase } from '@application/auth/use-cases/reset-password
 import { PrismaEmailVerificationTokenAdapter } from '@infra/adapters/prisma-email-verification-token.adapter.js';
 import { ResendEmailAdapter } from '@infra/adapters/resend-email.adapter.js';
 import { InMemoryRateLimiterAdapter } from '@infra/adapters/in-memory-rate-limiter.adapter.js';
+import { GoogleOAuthAdapter } from '@infra/adapters/google-oauth.adapter.js';
+import { GoogleOAuthCallbackUseCase } from '@application/auth/use-cases/google-oauth-callback.use-case.js';
 import { AuthController } from '@infra/entry-points/auth.controller.js';
 import { createServer } from '@infra/entry-points/server.js';
 
@@ -116,6 +118,21 @@ async function bootstrap() {
 
   const resetPasswordUseCase = new ResetPasswordUseCase(userRepo, evtRepo, passwordHasher, logger);
 
+  // --- Google OAuth ---
+  const googleOAuthAdapter = new GoogleOAuthAdapter(
+    ENV.GOOGLE_CLIENT_ID,
+    ENV.GOOGLE_CLIENT_SECRET,
+    ENV.GOOGLE_CALLBACK_URL,
+  );
+  const googleOAuthCallbackUseCase = new GoogleOAuthCallbackUseCase(
+    userRepo,
+    refreshTokenRepo,
+    tokenSigner,
+    googleOAuthAdapter,
+    logger,
+    ENV.REFRESH_TOKEN_TTL_DAYS,
+  );
+
   // --- Controllers ---
   const authController = new AuthController(
     loginUseCase,
@@ -126,6 +143,8 @@ async function bootstrap() {
     resendVerificationUseCase,
     forgotPasswordUseCase,
     resetPasswordUseCase,
+    googleOAuthCallbackUseCase,
+    googleOAuthAdapter.getAuthUrl(),
   );
 
   // --- Server ---

@@ -23,6 +23,7 @@ export interface HttpResponse {
   status: number;
   body: unknown;
   cookies?: ResponseCookie[];
+  headers?: Record<string, string>;
 }
 
 export interface ErrorResponse {

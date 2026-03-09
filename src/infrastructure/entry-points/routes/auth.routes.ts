@@ -30,6 +30,12 @@ function sendHttpResponse(res: Response, result: HttpResponse): void {
     }
   }
 
+  if (result.headers) {
+    for (const [key, value] of Object.entries(result.headers)) {
+      res.setHeader(key, value);
+    }
+  }
+
   if (result.body === null) {
     res.status(result.status).end();
     return;
@@ -78,6 +84,16 @@ export function createAuthRouter(controller: AuthController): Router {
 
   router.post('/reset-password', async (req: Request, res: Response) => {
     const result = await controller.resetPassword(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
+  router.get('/google/url', (req: Request, res: Response) => {
+    const result = controller.googleUrl(toHttpRequest(req));
+    sendHttpResponse(res, result);
+  });
+
+  router.post('/google/callback', async (req: Request, res: Response) => {
+    const result = await controller.googleCallback(toHttpRequest(req));
     sendHttpResponse(res, result);
   });
 

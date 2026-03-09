@@ -21,6 +21,15 @@ export class InMemoryUserAdapter implements IUserRepository {
     return null;
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    for (const user of this.store.values()) {
+      if (user.googleId === googleId) {
+        return user;
+      }
+    }
+    return null;
+  }
+
   async save(entity: User): Promise<void> {
     if (this.store.has(entity.id)) {
       throw new Error(`User with id '${entity.id}' already exists`);

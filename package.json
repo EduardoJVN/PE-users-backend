@@ -19,7 +19,8 @@
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
     "db:reset": "npx prisma migrate reset --force",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "db:seed": "npx prisma db seed"
   },
   "lint-staged": {
     "src/**/*.{ts,js}": [
@@ -66,6 +67,7 @@
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
+    "google-auth-library": "^10.6.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "pino": "^10.3.1",

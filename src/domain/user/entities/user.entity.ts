@@ -1,4 +1,5 @@
 import { InvalidEmailFormatError } from '@domain/user/errors/invalid-email-format.error.js';
+import { InvalidGoogleIdError } from '@domain/auth/errors/invalid-google-id.error.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,6 +14,7 @@ export class User {
     public readonly statusId: number,
     public readonly roleId: number,
     public readonly registerTypeId: number,
+    public readonly googleId: string | null,
     public readonly isActive: boolean,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
@@ -25,6 +27,7 @@ export class User {
     password: string | null,
     name: string,
     lastName: string,
+    googleId: string | null,
     statusId: number,
     roleId: number,
     registerTypeId: number,
@@ -43,6 +46,7 @@ export class User {
       statusId,
       roleId,
       registerTypeId,
+      googleId,
       false,
       now,
       now,
@@ -60,6 +64,7 @@ export class User {
     statusId: number,
     roleId: number,
     registerTypeId: number,
+    googleId: string | null,
     isActive: boolean,
     createdAt: Date,
     updatedAt: Date,
@@ -75,6 +80,7 @@ export class User {
       statusId,
       roleId,
       registerTypeId,
+      googleId,
       isActive,
       createdAt,
       updatedAt,
@@ -93,7 +99,30 @@ export class User {
       activeStatusId,
       this.roleId,
       this.registerTypeId,
+      this.googleId,
       true,
+      this.createdAt,
+      new Date(),
+      this.deletedAt,
+    );
+  }
+
+  linkGoogle(googleId: string): User {
+    if (googleId.trim() === '') {
+      throw new InvalidGoogleIdError();
+    }
+    return new User(
+      this.id,
+      this.email,
+      this.password,
+      this.name,
+      this.lastName,
+      this.avatarUrl,
+      this.statusId,
+      this.roleId,
+      this.registerTypeId,
+      googleId,
+      this.isActive,
       this.createdAt,
       new Date(),
       this.deletedAt,

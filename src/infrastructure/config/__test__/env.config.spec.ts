@@ -23,6 +23,9 @@ describe('env.config', () => {
     process.env.RESEND_API_KEY = 'resend-placeholder-key-for-tests';
     process.env.RESEND_FROM_EMAIL = 'no-reply@example.com';
     process.env.FRONTEND_URL = 'http://localhost:3000';
+    process.env.GOOGLE_CLIENT_ID = 'my-google-client-id.apps.googleusercontent.com';
+    process.env.GOOGLE_CLIENT_SECRET = 'my-google-client-secret';
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3000/auth/google/callback';
   };
 
   it('populates JWT_PRIVATE_KEY and JWT_PUBLIC_KEY when both are present', async () => {
@@ -126,6 +129,9 @@ describe('env.config', () => {
     delete process.env.RESEND_API_KEY;
     delete process.env.RESEND_FROM_EMAIL;
     delete process.env.FRONTEND_URL;
+    delete process.env.GOOGLE_CLIENT_ID;
+    delete process.env.GOOGLE_CLIENT_SECRET;
+    delete process.env.GOOGLE_CALLBACK_URL;
 
     const { ENV } = await import('@infra/config/env.config.js');
 
@@ -136,6 +142,9 @@ describe('env.config', () => {
     expect(ENV.RESEND_API_KEY).toBe('');
     expect(ENV.RESEND_FROM_EMAIL).toBe('');
     expect(ENV.FRONTEND_URL).toBe('');
+    expect(ENV.GOOGLE_CLIENT_ID).toBe('');
+    expect(ENV.GOOGLE_CLIENT_SECRET).toBe('');
+    expect(ENV.GOOGLE_CALLBACK_URL).toBe('');
     expect(ENV.VERIFICATION_TOKEN_TTL_MS).toBe(86_400_000);
     expect(ENV.RESET_TOKEN_TTL_MS).toBe(3_600_000);
     expect(ENV.RATE_LIMIT_WINDOW_MS).toBe(3_600_000);
@@ -183,6 +192,52 @@ describe('env.config', () => {
 
     await expect(import('@infra/config/env.config.js')).rejects.toThrow(
       'Missing required environment variable: FRONTEND_URL',
+    );
+  });
+
+  it('populates GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_CALLBACK_URL when all are present', async () => {
+    prodEnv();
+
+    const { ENV } = await import('@infra/config/env.config.js');
+
+    expect(ENV.GOOGLE_CLIENT_ID).toBe('my-google-client-id.apps.googleusercontent.com');
+    expect(ENV.GOOGLE_CLIENT_SECRET).toBe('my-google-client-secret');
+    expect(ENV.GOOGLE_CALLBACK_URL).toBe('http://localhost:3000/auth/google/callback');
+  });
+
+  it('throws when GOOGLE_CLIENT_ID is missing in non-test env', async () => {
+    prodEnv();
+    delete process.env.GOOGLE_CLIENT_ID;
+
+    await expect(import('@infra/config/env.config.js')).rejects.toThrow(
+      'Missing required environment variable: GOOGLE_CLIENT_ID',
+    );
+  });
+
+  it('throws when GOOGLE_CLIENT_SECRET is missing in non-test env', async () => {
+    prodEnv();
+    delete process.env.GOOGLE_CLIENT_SECRET;
+
+    await expect(import('@infra/config/env.config.js')).rejects.toThrow(
+      'Missing required environment variable: GOOGLE_CLIENT_SECRET',
+    );
+  });
+
+  it('throws when GOOGLE_CALLBACK_URL is missing in non-test env', async () => {
+    prodEnv();
+    delete process.env.GOOGLE_CALLBACK_URL;
+
+    await expect(import('@infra/config/env.config.js')).rejects.toThrow(
+      'Missing required environment variable: GOOGLE_CALLBACK_URL',
+    );
+  });
+
+  it('throws when GOOGLE_CALLBACK_URL is not a valid URL in non-test env', async () => {
+    prodEnv();
+    process.env.GOOGLE_CALLBACK_URL = 'not-a-url';
+
+    await expect(import('@infra/config/env.config.js')).rejects.toThrow(
+      'Missing required environment variable: GOOGLE_CALLBACK_URL',
     );
   });
 });

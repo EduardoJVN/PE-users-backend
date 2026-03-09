@@ -8,10 +8,10 @@ datasource db {
 
 // --- ENUMS ---
 
-enum EmailVerificationStatus {
-  VERIFY
-  RESET
-}
+// enum EmailVerificationStatus {
+//   VERIFY
+//   RESET
+// }
 
 // --- ADMIN & STAFF ---
 
@@ -107,7 +107,7 @@ model EmailVerificationToken {
   userId     String                  @unique @map("user_id") @db.Uuid
   user       User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   tokenHash  String                  @map("token_hash")
-  type       EmailVerificationStatus
+  type       String                  @map("type") // Se mapeará a EmailVerificationStatus en el código
   expiresAt  DateTime                @map("expires_at")
   usedAt     DateTime?               @map("used_at")
   createdAt  DateTime                @default(now()) @map("created_at")

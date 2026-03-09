@@ -35,3 +35,7 @@ export const ResetPasswordSchema = z.object({
   token: z.string().min(1),
   newPassword: passwordSchema,
 });
+
+export const GoogleCallbackSchema = z.object({
+  code: z.string().min(1, 'Authorization code is required'),
+});

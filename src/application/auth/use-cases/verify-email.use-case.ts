@@ -20,7 +20,6 @@ export class VerifyEmailUseCase {
 
   async execute(command: VerifyEmailCommand): Promise<VerifyEmailResult> {
     const tokenHash = createHash('sha256').update(command.token).digest('hex');
-
     const token = await this.evtRepo.findByTokenHash(tokenHash);
     if (token === null) {
       throw new EmailVerificationTokenInvalidError();

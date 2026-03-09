@@ -13,6 +13,7 @@ import type { VerifyEmailUseCase } from '@application/auth/use-cases/verify-emai
 import type { ResendVerificationEmailUseCase } from '@application/auth/use-cases/resend-verification-email.use-case.js';
 import type { ForgotPasswordUseCase } from '@application/auth/use-cases/forgot-password.use-case.js';
 import type { ResetPasswordUseCase } from '@application/auth/use-cases/reset-password.use-case.js';
+import type { GoogleOAuthCallbackUseCase } from '@application/auth/use-cases/google-oauth-callback.use-case.js';
 
 const mockLogin = { execute: vi.fn() };
 const mockRefresh = { execute: vi.fn() };
@@ -22,6 +23,8 @@ const mockVerifyEmail = { execute: vi.fn() };
 const mockResendVerification = { execute: vi.fn() };
 const mockForgotPassword = { execute: vi.fn() };
 const mockResetPassword = { execute: vi.fn() };
+const mockGoogleOAuthCallback = { execute: vi.fn() };
+const mockGoogleAuthUrl = 'https://accounts.google.com/o/oauth2/auth?client_id=test';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -37,6 +40,8 @@ describe('AuthController', () => {
       mockResendVerification as unknown as ResendVerificationEmailUseCase,
       mockForgotPassword as unknown as ForgotPasswordUseCase,
       mockResetPassword as unknown as ResetPasswordUseCase,
+      mockGoogleOAuthCallback as unknown as GoogleOAuthCallbackUseCase,
+      mockGoogleAuthUrl,
     );
   });
 
@@ -473,6 +478,77 @@ describe('AuthController', () => {
       const response = await controller.resetPassword({ body: validBody });
 
       expect(response.status).toBe(500);
+    });
+  });
+
+  describe('googleUrl', () => {
+    it('returns 200 with Google auth URL in body', () => {
+      const response = controller.googleUrl({});
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ url: mockGoogleAuthUrl });
+    });
+  });
+
+  describe('googleCallback', () => {
+    it('returns 200 with accessToken and userId in body, refreshToken in cookie on success', async () => {
+      mockGoogleOAuthCallback.execute.mockResolvedValue({
+        accessToken: 'access-jwt',
+        refreshToken: 'plaintext-rt',
+        userId: 'user-123',
+      });
+
+      const response = await controller.googleCallback({ body: { code: 'auth-code-from-google' } });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ accessToken: 'access-jwt', userId: 'user-123' });
+      expect(response.cookies).toHaveLength(1);
+      expect(response.cookies![0].name).toBe('refreshToken');
+      expect(response.cookies![0].value).toBe('plaintext-rt');
+      expect(response.cookies![0].httpOnly).toBe(true);
+      expect(response.cookies![0].secure).toBe(true);
+      expect(response.cookies![0].sameSite).toBe('Strict');
+      expect(mockGoogleOAuthCallback.execute).toHaveBeenCalledWith({
+        code: 'auth-code-from-google',
+      });
+    });
+
+    it('returns 400 when code is missing from body', async () => {
+      const response = await controller.googleCallback({ body: {} });
+
+      expect(response.status).toBe(400);
+      expect(mockGoogleOAuthCallback.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when body is undefined', async () => {
+      const response = await controller.googleCallback({});
+
+      expect(response.status).toBe(400);
+      expect(mockGoogleOAuthCallback.execute).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 when use case throws a DomainError', async () => {
+      const { DomainError } = await import('@shared/errors/domain.error.js');
+      class TestDomainError extends DomainError {
+        constructor() {
+          super('OAuth failed');
+        }
+      }
+      mockGoogleOAuthCallback.execute.mockRejectedValue(new TestDomainError());
+
+      const response = await controller.googleCallback({ body: { code: 'bad-code' } });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({ error: 'OAuth failed' });
+    });
+
+    it('returns 500 when use case throws an unexpected error', async () => {
+      mockGoogleOAuthCallback.execute.mockRejectedValue(new Error('Network error'));
+
+      const response = await controller.googleCallback({ body: { code: 'some-code' } });
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ error: 'Internal server error' });
     });
   });
 });

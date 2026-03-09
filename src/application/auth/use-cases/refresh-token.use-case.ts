@@ -33,14 +33,14 @@ export class RefreshTokenUseCase {
       throw new RefreshTokenExpiredError();
     }
 
-    if (existingToken.isUsed()) {
+    if (existingToken.isRevoked()) {
       // Stolen token detected — revoke the entire user session
       await this.refreshTokenRepository.deleteByUserId(existingToken.userId);
       throw new RefreshTokenInvalidError();
     }
 
-    // Mark old token as used and persist
-    existingToken.markAsUsed();
+    // Revoke old token and persist
+    existingToken.revoke();
     await this.refreshTokenRepository.update(existingToken);
 
     // Load user to get email for JWT payload

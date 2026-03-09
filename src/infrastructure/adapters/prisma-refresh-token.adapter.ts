@@ -32,7 +32,7 @@ export class PrismaRefreshTokenAdapter implements IRefreshTokenRepository {
         userId: entity.userId,
         tokenHash: entity.tokenHash,
         expiresAt: entity.expiresAt,
-        usedAt: entity.usedAt,
+        revokedAt: entity.revokedAt,
         createdAt: entity.createdAt,
       },
     });
@@ -41,7 +41,7 @@ export class PrismaRefreshTokenAdapter implements IRefreshTokenRepository {
   async update(entity: RefreshToken): Promise<void> {
     await this.db.refreshToken.update({
       where: { id: entity.id },
-      data: { usedAt: entity.usedAt },
+      data: { revokedAt: entity.revokedAt },
     });
   }
 
@@ -59,7 +59,7 @@ function toEntity(row: {
   userId: string;
   tokenHash: string;
   expiresAt: Date;
-  usedAt: Date | null;
+  revokedAt: Date | null;
   createdAt: Date;
 }): RefreshToken {
   return RefreshToken.reconstitute(
@@ -67,7 +67,7 @@ function toEntity(row: {
     row.userId,
     row.tokenHash,
     row.expiresAt,
-    row.usedAt,
+    row.revokedAt,
     row.createdAt,
   );
 }

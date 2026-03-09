@@ -8,6 +8,7 @@ export interface HttpRequest {
   query?: Record<string, string>;
   cookies?: Record<string, string>;
   headers?: Record<string, string>;
+  userId?: string;
 }
 
 export interface ResponseCookie {

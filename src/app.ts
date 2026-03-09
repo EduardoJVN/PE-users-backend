@@ -22,7 +22,9 @@ import { ResendEmailAdapter } from '@infra/adapters/resend-email.adapter.js';
 import { InMemoryRateLimiterAdapter } from '@infra/adapters/in-memory-rate-limiter.adapter.js';
 import { GoogleOAuthAdapter } from '@infra/adapters/google-oauth.adapter.js';
 import { GoogleOAuthCallbackUseCase } from '@application/auth/use-cases/google-oauth-callback.use-case.js';
+import { GetMeUseCase } from '@application/user/use-cases/get-me.use-case.js';
 import { AuthController } from '@infra/entry-points/auth.controller.js';
+import { UserController } from '@infra/entry-points/user.controller.js';
 import { createServer } from '@infra/entry-points/server.js';
 
 async function bootstrap() {
@@ -133,7 +135,11 @@ async function bootstrap() {
     ENV.REFRESH_TOKEN_TTL_DAYS,
   );
 
+  // --- User use cases ---
+  const getMeUseCase = new GetMeUseCase(userRepo, logger);
+
   // --- Controllers ---
+  const userController = new UserController(getMeUseCase);
   const authController = new AuthController(
     loginUseCase,
     refreshTokenUseCase,
@@ -148,7 +154,13 @@ async function bootstrap() {
   );
 
   // --- Server ---
-  const app = createServer(authController, errorReporter);
+  const app = createServer(
+    authController,
+    errorReporter,
+    userController,
+    tokenSigner,
+    tokenBlacklist,
+  );
 
   process.on('SIGTERM', async () => {
     await prisma.$disconnect();

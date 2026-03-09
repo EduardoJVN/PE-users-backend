@@ -149,7 +149,7 @@ function makeExpiredToken(plaintextToken = 'token-1', userId = 'user-1'): Refres
   );
 }
 
-function makeUsedToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
+function makeRevokedToken(plaintextToken = 'token-1', userId = 'user-1'): RefreshToken {
   return RefreshToken.reconstitute(
     `id-of-${plaintextToken}`,
     userId,
@@ -237,7 +237,7 @@ describe('RefreshTokenUseCase', () => {
     expect(newToken!.id).not.toBe(result.refreshToken);
   });
 
-  it('marks the old token as used before saving the new token', async () => {
+  it('revokes the old token before saving the new token', async () => {
     const token = makeValidToken();
     refreshTokenRepo.seed(token);
     userRepo.seed(makeUser());
@@ -246,7 +246,7 @@ describe('RefreshTokenUseCase', () => {
     const callOrder: string[] = [];
     vi.spyOn(refreshTokenRepo, 'update').mockImplementation(async (t: RefreshToken) => {
       callOrder.push('update');
-      expect(t.isUsed()).toBe(true); // must be marked used before update
+      expect(t.isRevoked()).toBe(true); // must be revoked before update
     });
     vi.spyOn(refreshTokenRepo, 'save').mockImplementation(async () => {
       callOrder.push('save');
@@ -272,8 +272,8 @@ describe('RefreshTokenUseCase', () => {
     );
   });
 
-  it('throws RefreshTokenInvalidError and calls deleteByUserId when token is already used (stolen token)', async () => {
-    const usedToken = makeUsedToken('token-1', 'user-1');
+  it('throws RefreshTokenInvalidError and calls deleteByUserId when token is already revoked (stolen token)', async () => {
+    const usedToken = makeRevokedToken('token-1', 'user-1');
     refreshTokenRepo.seed(usedToken);
 
     await expect(useCase.execute({ refreshToken: 'token-1' })).rejects.toThrow(

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   RefreshToken,
-  RefreshTokenAlreadyUsedError,
+  RefreshTokenAlreadyRevokedError,
   RefreshTokenExpiresInPastError,
 } from '@domain/auth/entities/refresh-token.entity.js';
 import { DomainError } from '@shared/errors/domain.error.js';
@@ -21,7 +21,7 @@ describe('RefreshToken', () => {
       expect(token.userId).toBe('user-1');
       expect(token.tokenHash).toBe('hash-abc');
       expect(token.expiresAt).toBe(expires);
-      expect(token.usedAt).toBeNull();
+      expect(token.revokedAt).toBeNull();
       expect(token.createdAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(token.createdAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
@@ -33,24 +33,22 @@ describe('RefreshToken', () => {
     });
 
     it('throws when expiresAt equals now (boundary — not strictly future)', () => {
-      // Since we check <= new Date(), exact-now is also rejected
-      // We can't perfectly control timing so we test with a date clearly in the past
       const slightlyPast = new Date(Date.now() - 100);
       expect(() => RefreshToken.create('rt-1', 'user-1', 'hash', slightlyPast)).toThrow(
         DomainError,
       );
     });
 
-    it('sets usedAt to null on creation', () => {
+    it('sets revokedAt to null on creation', () => {
       const token = RefreshToken.create('rt-1', 'user-1', 'hash', futureDate());
-      expect(token.usedAt).toBeNull();
+      expect(token.revokedAt).toBeNull();
     });
   });
 
   describe('reconstitute()', () => {
     it('reconstitutes with all provided values without validation', () => {
       const expiresAt = pastDate();
-      const usedAt = new Date('2024-01-01');
+      const revokedAt = new Date('2024-01-01');
       const createdAt = new Date('2023-12-01');
 
       const token = RefreshToken.reconstitute(
@@ -58,7 +56,7 @@ describe('RefreshToken', () => {
         'user-99',
         'h',
         expiresAt,
-        usedAt,
+        revokedAt,
         createdAt,
       );
 
@@ -66,11 +64,11 @@ describe('RefreshToken', () => {
       expect(token.userId).toBe('user-99');
       expect(token.tokenHash).toBe('h');
       expect(token.expiresAt).toBe(expiresAt);
-      expect(token.usedAt).toBe(usedAt);
+      expect(token.revokedAt).toBe(revokedAt);
       expect(token.createdAt).toBe(createdAt);
     });
 
-    it('reconstitutes with null usedAt', () => {
+    it('reconstitutes with null revokedAt', () => {
       const token = RefreshToken.reconstitute(
         'rt-1',
         'user-1',
@@ -79,7 +77,7 @@ describe('RefreshToken', () => {
         null,
         new Date(),
       );
-      expect(token.usedAt).toBeNull();
+      expect(token.revokedAt).toBeNull();
     });
   });
 
@@ -96,13 +94,13 @@ describe('RefreshToken', () => {
     });
   });
 
-  describe('isUsed()', () => {
-    it('returns false when usedAt is null', () => {
+  describe('isRevoked()', () => {
+    it('returns false when revokedAt is null', () => {
       const token = RefreshToken.create('rt-1', 'user-1', 'hash', futureDate());
-      expect(token.isUsed()).toBe(false);
+      expect(token.isRevoked()).toBe(false);
     });
 
-    it('returns true when usedAt is set', () => {
+    it('returns true when revokedAt is set', () => {
       const token = RefreshToken.reconstitute(
         'rt-1',
         'user-1',
@@ -111,29 +109,29 @@ describe('RefreshToken', () => {
         new Date(),
         new Date(),
       );
-      expect(token.isUsed()).toBe(true);
+      expect(token.isRevoked()).toBe(true);
     });
   });
 
-  describe('markAsUsed()', () => {
-    it('sets usedAt to a date when called on an unused token', () => {
+  describe('revoke()', () => {
+    it('sets revokedAt to a date when called on an active token', () => {
       const token = RefreshToken.create('rt-1', 'user-1', 'hash', futureDate());
       const before = new Date();
-      token.markAsUsed();
+      token.revoke();
       const after = new Date();
 
-      expect(token.usedAt).not.toBeNull();
-      expect(token.usedAt!.getTime()).toBeGreaterThanOrEqual(before.getTime());
-      expect(token.usedAt!.getTime()).toBeLessThanOrEqual(after.getTime());
+      expect(token.revokedAt).not.toBeNull();
+      expect(token.revokedAt!.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(token.revokedAt!.getTime()).toBeLessThanOrEqual(after.getTime());
     });
 
-    it('throws RefreshTokenAlreadyUsedError when called twice', () => {
+    it('throws RefreshTokenAlreadyRevokedError when called twice', () => {
       const token = RefreshToken.create('rt-1', 'user-1', 'hash', futureDate());
-      token.markAsUsed();
-      expect(() => token.markAsUsed()).toThrow(RefreshTokenAlreadyUsedError);
+      token.revoke();
+      expect(() => token.revoke()).toThrow(RefreshTokenAlreadyRevokedError);
     });
 
-    it('throws a DomainError when called on an already-used reconstituted token', () => {
+    it('throws a DomainError when called on an already-revoked reconstituted token', () => {
       const token = RefreshToken.reconstitute(
         'rt-1',
         'user-1',
@@ -142,7 +140,7 @@ describe('RefreshToken', () => {
         new Date(),
         new Date(),
       );
-      expect(() => token.markAsUsed()).toThrow(DomainError);
+      expect(() => token.revoke()).toThrow(DomainError);
     });
   });
 });

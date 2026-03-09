@@ -1,8 +1,8 @@
 import { DomainError } from '@shared/errors/domain.error.js';
 
-export class RefreshTokenAlreadyUsedError extends DomainError {
+export class RefreshTokenAlreadyRevokedError extends DomainError {
   constructor() {
-    super('Refresh token has already been used');
+    super('Refresh token has already been revoked');
   }
 }
 
@@ -18,7 +18,7 @@ export class RefreshToken {
     public readonly userId: string,
     public readonly tokenHash: string,
     public readonly expiresAt: Date,
-    public usedAt: Date | null,
+    public revokedAt: Date | null,
     public readonly createdAt: Date,
   ) {}
 
@@ -35,24 +35,24 @@ export class RefreshToken {
     userId: string,
     tokenHash: string,
     expiresAt: Date,
-    usedAt: Date | null,
+    revokedAt: Date | null,
     createdAt: Date,
   ): RefreshToken {
-    return new RefreshToken(id, userId, tokenHash, expiresAt, usedAt, createdAt);
+    return new RefreshToken(id, userId, tokenHash, expiresAt, revokedAt, createdAt);
   }
 
   isExpired(): boolean {
     return this.expiresAt < new Date();
   }
 
-  isUsed(): boolean {
-    return this.usedAt !== null;
+  isRevoked(): boolean {
+    return this.revokedAt !== null;
   }
 
-  markAsUsed(): void {
-    if (this.usedAt !== null) {
-      throw new RefreshTokenAlreadyUsedError();
+  revoke(): void {
+    if (this.revokedAt !== null) {
+      throw new RefreshTokenAlreadyRevokedError();
     }
-    this.usedAt = new Date();
+    this.revokedAt = new Date();
   }
 }

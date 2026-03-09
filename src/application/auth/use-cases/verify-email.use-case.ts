@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { EmailVerificationTokenExpiredError } from '@domain/auth/errors/email-verification-token-expired.error.js';
 import { EmailVerificationTokenInvalidError } from '@domain/auth/errors/email-verification-token-invalid.error.js';
 import { UserAlreadyVerifiedError } from '@domain/auth/errors/user-already-verified.error.js';
@@ -18,7 +19,8 @@ export class VerifyEmailUseCase {
   ) {}
 
   async execute(command: VerifyEmailCommand): Promise<VerifyEmailResult> {
-    const token = await this.evtRepo.findByTokenHash(command.token);
+    const tokenHash = createHash('sha256').update(command.token).digest('hex');
+    const token = await this.evtRepo.findByTokenHash(tokenHash);
     if (token === null) {
       throw new EmailVerificationTokenInvalidError();
     }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { BcryptPasswordHasherAdapter } from '@infra/adapters/bcrypt-password-hasher.adapter.js';
+import { BcryptPasswordHasherAdapter } from '@infra/auth/adapters/bcrypt-password-hasher.adapter.js';
 
 describe('BcryptPasswordHasherAdapter', () => {
   let adapter: BcryptPasswordHasherAdapter;

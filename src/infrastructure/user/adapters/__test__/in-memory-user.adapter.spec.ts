@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InMemoryUserAdapter } from '@infra/adapters/in-memory-user.adapter.js';
+import { InMemoryUserAdapter } from '@infra/user/adapters/in-memory-user.adapter.js';
 import { User } from '@domain/user/entities/user.entity.js';
 
 const makeUser = (id: string, email: string, googleId: string | null = null): User =>

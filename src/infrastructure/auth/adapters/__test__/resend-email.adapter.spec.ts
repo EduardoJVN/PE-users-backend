@@ -10,7 +10,7 @@ vi.mock('resend', () => {
   return { Resend };
 });
 
-import { ResendEmailAdapter } from '@infra/adapters/resend-email.adapter.js';
+import { ResendEmailAdapter } from '@infra/auth/adapters/resend-email.adapter.js';
 
 describe('ResendEmailAdapter', () => {
   let adapter: ResendEmailAdapter;

@@ -4,11 +4,11 @@ import { ENV } from '@infra/config/env.config.js';
 import { prisma } from '@infra/config/prisma.js';
 import { Logger } from '@infra/adapters/pino-logger.adapter.js';
 import { LogErrorReporter } from '@infra/adapters/log-error-reporter.adapter.js';
-import { PrismaUserAdapter } from '@infra/adapters/prisma-user.adapter.js';
-import { PrismaRefreshTokenAdapter } from '@infra/adapters/prisma-refresh-token.adapter.js';
-import { InMemoryTokenBlacklistAdapter } from '@infra/adapters/in-memory-token-blacklist.adapter.js';
-import { BcryptPasswordHasherAdapter } from '@infra/adapters/bcrypt-password-hasher.adapter.js';
-import { JwtTokenSignerAdapter } from '@infra/adapters/jwt-token-signer.adapter.js';
+import { PrismaUserAdapter } from '@infra/user/adapters/prisma-user.adapter.js';
+import { PrismaRefreshTokenAdapter } from '@infra/auth/adapters/prisma-refresh-token.adapter.js';
+import { InMemoryTokenBlacklistAdapter } from '@infra/auth/adapters/in-memory-token-blacklist.adapter.js';
+import { BcryptPasswordHasherAdapter } from '@infra/auth/adapters/bcrypt-password-hasher.adapter.js';
+import { JwtTokenSignerAdapter } from '@infra/auth/adapters/jwt-token-signer.adapter.js';
 import { LoginUseCase } from '@application/auth/use-cases/login.use-case.js';
 import { RefreshTokenUseCase } from '@application/auth/use-cases/refresh-token.use-case.js';
 import { LogoutUseCase } from '@application/auth/use-cases/logout.use-case.js';
@@ -17,12 +17,14 @@ import { VerifyEmailUseCase } from '@application/auth/use-cases/verify-email.use
 import { ResendVerificationEmailUseCase } from '@application/auth/use-cases/resend-verification-email.use-case.js';
 import { ForgotPasswordUseCase } from '@application/auth/use-cases/forgot-password.use-case.js';
 import { ResetPasswordUseCase } from '@application/auth/use-cases/reset-password.use-case.js';
-import { PrismaEmailVerificationTokenAdapter } from '@infra/adapters/prisma-email-verification-token.adapter.js';
-import { ResendEmailAdapter } from '@infra/adapters/resend-email.adapter.js';
-import { InMemoryRateLimiterAdapter } from '@infra/adapters/in-memory-rate-limiter.adapter.js';
-import { GoogleOAuthAdapter } from '@infra/adapters/google-oauth.adapter.js';
+import { PrismaEmailVerificationTokenAdapter } from '@infra/auth/adapters/prisma-email-verification-token.adapter.js';
+import { ResendEmailAdapter } from '@infra/auth/adapters/resend-email.adapter.js';
+import { InMemoryRateLimiterAdapter } from '@infra/auth/adapters/in-memory-rate-limiter.adapter.js';
+import { GoogleOAuthAdapter } from '@infra/auth/adapters/google-oauth.adapter.js';
 import { GoogleOAuthCallbackUseCase } from '@application/auth/use-cases/google-oauth-callback.use-case.js';
-import { AuthController } from '@infra/entry-points/auth.controller.js';
+import { GetMeUseCase } from '@application/user/use-cases/get-me.use-case.js';
+import { AuthController } from '@infra/auth/entry-points/auth.controller.js';
+import { UserController } from '@infra/user/entry-points/user.controller.js';
 import { createServer } from '@infra/entry-points/server.js';
 
 async function bootstrap() {
@@ -133,7 +135,11 @@ async function bootstrap() {
     ENV.REFRESH_TOKEN_TTL_DAYS,
   );
 
+  // --- User use cases ---
+  const getMeUseCase = new GetMeUseCase(userRepo, logger);
+
   // --- Controllers ---
+  const userController = new UserController(getMeUseCase);
   const authController = new AuthController(
     loginUseCase,
     refreshTokenUseCase,
@@ -148,7 +154,13 @@ async function bootstrap() {
   );
 
   // --- Server ---
-  const app = createServer(authController, errorReporter);
+  const app = createServer(
+    authController,
+    errorReporter,
+    userController,
+    tokenSigner,
+    tokenBlacklist,
+  );
 
   process.on('SIGTERM', async () => {
     await prisma.$disconnect();

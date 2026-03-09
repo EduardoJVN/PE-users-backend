@@ -48,13 +48,59 @@ src/
 │       ├── use-cases/
 │       └── dto/
 ├── infrastructure/
-│   ├── adapters/          # DB, email, logger implementations
-│   ├── entry-points/      # HTTP controllers (BaseController lives here)
-│   │   └── schemas/       # Zod schemas por módulo ({module}.schemas.ts)
-│   └── config/            # env vars, bootstrap helpers
+│   ├── {module}/          # One folder per module — mirrors domain/ and application/
+│   │   ├── adapters/      # Adapter implementations specific to this module
+│   │   └── entry-points/  # Controller, routes/, schemas/, middlewares/ for this module
+│   ├── adapters/          # GLOBAL adapters used across multiple modules (logger, error reporter)
+│   ├── entry-points/      # SHARED HTTP infrastructure: BaseController, server.ts, docs/
+│   └── config/            # env vars, prisma client, bootstrap helpers
 ├── shared/
 │   └── errors/            # DomainError, NotFoundError base classes
-└── app.ts                 # Composition root (temporary — replaced by framework bootstrap)
+└── app.ts                 # Composition root
+```
+
+### Infrastructure vertical slicing rules
+
+**Module folder** (`infrastructure/{module}/`): everything that belongs exclusively to that module.
+- `adapters/` — port implementations: Prisma adapters, in-memory adapters, third-party SDK wrappers
+- `entry-points/` — controller, routes/, schemas/, middlewares/ (all scoped to the module)
+
+**Global `adapters/`** (`infrastructure/adapters/`): only adapters used by **more than one module** or that implement cross-cutting ports (e.g. `ILogger`, error reporting). Currently: `pino-logger.adapter.ts`, `log-error-reporter.adapter.ts`.
+
+**Shared `entry-points/`** (`infrastructure/entry-points/`): HTTP infrastructure shared by all modules. Currently: `base.controller.ts`, `server.ts`, `docs/`.
+
+**`config/`**: env config, Prisma client, bootstrap reporter. Always global.
+
+**Concrete example:**
+```
+infrastructure/
+  auth/
+    adapters/
+      bcrypt-password-hasher.adapter.ts
+      jwt-token-signer.adapter.ts
+      prisma-refresh-token.adapter.ts
+      ...
+    entry-points/
+      auth.controller.ts
+      routes/auth.routes.ts
+      schemas/auth.schemas.ts
+      middlewares/jwt-auth.middleware.ts
+  user/
+    adapters/
+      prisma-user.adapter.ts
+    entry-points/
+      user.controller.ts
+      routes/user.routes.ts
+      schemas/user.schemas.ts
+  adapters/                  ← global only
+    pino-logger.adapter.ts
+    log-error-reporter.adapter.ts
+  entry-points/              ← shared HTTP infra only
+    base.controller.ts
+    server.ts
+  config/
+    env.config.ts
+    prisma.ts
 ```
 
 **app.ts is the composition root.** All dependencies are instantiated and injected here — no service locators, no singletons in domain/application.
@@ -204,8 +250,10 @@ When adding a new feature, create files in this order — domain first, infrastr
    src/application/{module}/use-cases/list-{module}s.use-case.ts
    src/application/{module}/use-cases/update-{module}.use-case.ts
    src/application/{module}/use-cases/delete-{module}.use-case.ts
-6. src/infrastructure/adapters/{name}.adapter.ts              ← implements the port
-7. src/infrastructure/entry-points/{name}.controller.ts       ← extends BaseController
+6. src/infrastructure/{module}/adapters/{name}.adapter.ts     ← implements the port
+7. src/infrastructure/{module}/entry-points/{name}.controller.ts  ← extends BaseController
+   src/infrastructure/{module}/entry-points/routes/{name}.routes.ts
+   src/infrastructure/{module}/entry-points/schemas/{name}.schemas.ts
 8. Wire in app.ts / framework bootstrap                       ← instantiate + inject
 ```
 
@@ -224,10 +272,17 @@ src/domain/{module}/entities/
   __test__/
     {name}.entity.spec.ts
 
-src/infrastructure/adapters/
+src/infrastructure/{module}/adapters/
   {name}.adapter.ts
   __test__/
     {name}.adapter.spec.ts
+
+src/infrastructure/{module}/entry-points/
+  {name}.controller.ts
+  routes/{name}.routes.ts
+  schemas/{name}.schemas.ts
+  __test__/
+    {name}.controller.spec.ts
 ```
 
 Every spec MUST cover:
@@ -505,7 +560,7 @@ Naming conventions:
 - Reusable sub-schemas: `camelCase` (e.g. `passwordSchema`)
 
 ```typescript
-// ✅ infrastructure/entry-points/schemas/auth.schemas.ts
+// ✅ infrastructure/auth/entry-points/schemas/auth.schemas.ts
 import { z } from 'zod';
 
 export const passwordSchema = z
@@ -621,7 +676,7 @@ export class InvalidPriceError extends DomainError {
 | Use `vi.fn()` to mock a port | Doesn't enforce the interface contract |
 | Call `console.log` in domain or application | Inject `ILogger` instead |
 | Put Zod schemas in domain or application | Validation is an infrastructure concern |
-| Define Zod schemas inline in a controller | Schemas go in `entry-points/schemas/{module}.schemas.ts` |
+| Define Zod schemas inline in a controller | Schemas go in `infrastructure/{module}/entry-points/schemas/{module}.schemas.ts` |
 | Throw `new Error()` from domain | Use a typed `DomainError` subclass |
 | Add business logic to a controller | Controllers only translate, never decide |
 | Access `process.env` outside `infrastructure/config/` | Centralizes env coupling |

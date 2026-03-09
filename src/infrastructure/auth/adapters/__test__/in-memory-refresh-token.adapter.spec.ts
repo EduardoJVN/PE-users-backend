@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InMemoryRefreshTokenAdapter } from '@infra/adapters/in-memory-refresh-token.adapter.js';
+import { InMemoryRefreshTokenAdapter } from '@infra/auth/adapters/in-memory-refresh-token.adapter.js';
 import { RefreshToken } from '@domain/auth/entities/refresh-token.entity.js';
 
 const futureDate = (): Date => {

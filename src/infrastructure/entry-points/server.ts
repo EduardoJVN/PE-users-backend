@@ -3,14 +3,22 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import type { Application, Request, Response, NextFunction } from 'express';
 import type { IErrorReporter } from '@domain/ports/error-reporter.port.js';
-import type { AuthController } from '@infra/entry-points/auth.controller.js';
-import { createAuthRouter } from '@infra/entry-points/routes/auth.routes.js';
+import type { ITokenSigner } from '@domain/auth/ports/token-signer.port.js';
+import type { ITokenBlacklist } from '@domain/auth/ports/token-blacklist.port.js';
+import type { AuthController } from '@infra/auth/entry-points/auth.controller.js';
+import type { UserController } from '@infra/user/entry-points/user.controller.js';
+import { createAuthRouter } from '@infra/auth/entry-points/routes/auth.routes.js';
+import { createUserRouter } from '@infra/user/entry-points/routes/user.routes.js';
+import { createJwtAuthMiddleware } from '@infra/auth/entry-points/middlewares/jwt-auth.middleware.js';
 import { openApiSpec } from '@infra/entry-points/docs/openapi.js';
 import { ENV } from '@infra/config/env.config.js';
 
 export function createServer(
   authController: AuthController,
   errorReporter: IErrorReporter,
+  userController: UserController,
+  tokenSigner: ITokenSigner,
+  tokenBlacklist: ITokenBlacklist,
 ): Application {
   const app = express();
 
@@ -25,7 +33,10 @@ export function createServer(
     });
   }
 
+  const jwtMiddleware = createJwtAuthMiddleware(tokenSigner, tokenBlacklist);
+
   app.use('/auth', createAuthRouter(authController));
+  app.use('/users', createUserRouter(userController, jwtMiddleware));
 
   app.use('/health', (_req, res) => {
     res.status(200).send('OK');

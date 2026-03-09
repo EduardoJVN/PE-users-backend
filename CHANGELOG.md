@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.3.2...v1.4.0) (2026-03-09)
+
+
+### Features
+
+* add google auth ([24381ed](https://github.com/EduardoJVN/PE-users-backend/commit/24381edeabaae775bcf76bd09d017fa6f2edfeea))
+* add google auth ([2301175](https://github.com/EduardoJVN/PE-users-backend/commit/2301175078372f5220c0ae69ee1090cccff97a5f))
+* add middleware auth user ([173dab9](https://github.com/EduardoJVN/PE-users-backend/commit/173dab9bc0b3ab5b14a4a336c1f2a2664d8dda66))
+
+
+### Bug Fixes
+
+* domain refresh token ([2ae392f](https://github.com/EduardoJVN/PE-users-backend/commit/2ae392f7ca1be5c0570b956507e55a66995c65da))
+* migrations ([df20932](https://github.com/EduardoJVN/PE-users-backend/commit/df20932e94e40aa92e027610d2bb1c2fc5302971))
+* project structure infra ([83b5e29](https://github.com/EduardoJVN/PE-users-backend/commit/83b5e29042b8b29011382bf6b3168a489b2c628a))
+
 ## [1.3.2](https://github.com/EduardoJVN/PE-users-backend/compare/v1.3.1...v1.3.2) (2026-03-06)
 
 

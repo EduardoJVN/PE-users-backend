@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
-import { PrismaEmailVerificationTokenAdapter } from '@infra/adapters/prisma-email-verification-token.adapter.js';
+import { PrismaEmailVerificationTokenAdapter } from '@infra/auth/adapters/prisma-email-verification-token.adapter.js';
 import { EmailVerificationToken } from '@domain/auth/entities/email-verification-token.entity.js';
 
 const makeEntity = (

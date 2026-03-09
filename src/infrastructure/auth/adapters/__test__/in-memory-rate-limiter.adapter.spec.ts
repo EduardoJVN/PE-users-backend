@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { InMemoryRateLimiterAdapter } from '@infra/adapters/in-memory-rate-limiter.adapter.js';
+import { InMemoryRateLimiterAdapter } from '@infra/auth/adapters/in-memory-rate-limiter.adapter.js';
 
 describe('InMemoryRateLimiterAdapter', () => {
   let adapter: InMemoryRateLimiterAdapter;

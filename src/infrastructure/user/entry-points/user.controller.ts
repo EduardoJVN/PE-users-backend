@@ -1,5 +1,5 @@
-import { BaseController } from './base.controller.js';
-import type { HttpRequest, HttpResponse } from './base.controller.js';
+import { BaseController } from '@infra/entry-points/base.controller.js';
+import type { HttpRequest, HttpResponse } from '@infra/entry-points/base.controller.js';
 import type { GetMeUseCase } from '@application/user/use-cases/get-me.use-case.js';
 
 export class UserController extends BaseController {

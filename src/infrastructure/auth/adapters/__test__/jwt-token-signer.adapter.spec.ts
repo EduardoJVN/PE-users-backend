@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { generateKeyPairSync } from 'node:crypto';
-import { JwtTokenSignerAdapter } from '@infra/adapters/jwt-token-signer.adapter.js';
+import { JwtTokenSignerAdapter } from '@infra/auth/adapters/jwt-token-signer.adapter.js';
 
 let privateKey: string;
 let publicKey: string;

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response, RequestHandler } from 'express';
-import type { UserController } from '@infra/entry-points/user.controller.js';
+import type { UserController } from '@infra/user/entry-points/user.controller.js';
 import type {
   HttpRequest,
   HttpResponse,

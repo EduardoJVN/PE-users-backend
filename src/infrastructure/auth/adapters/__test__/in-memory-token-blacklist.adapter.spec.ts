@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InMemoryTokenBlacklistAdapter } from '@infra/adapters/in-memory-token-blacklist.adapter.js';
+import { InMemoryTokenBlacklistAdapter } from '@infra/auth/adapters/in-memory-token-blacklist.adapter.js';
 
 describe('InMemoryTokenBlacklistAdapter', () => {
   let adapter: InMemoryTokenBlacklistAdapter;

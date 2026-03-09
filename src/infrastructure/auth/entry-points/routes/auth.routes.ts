@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import type { AuthController } from '@infra/entry-points/auth.controller.js';
+import type { AuthController } from '@infra/auth/entry-points/auth.controller.js';
 import type {
   HttpRequest,
   HttpResponse,

@@ -38,7 +38,7 @@ src/
 └── app.ts                 # Composition root — all DI happens here
 ```
 
-**Global `adapters/`**: only adapters that implement cross-cutting ports (ILogger, error reporting). Currently: `pino-logger.adapter.ts`, `log-error-reporter.adapter.ts`.
+**Global `adapters/`**: only adapters that implement cross-cutting ports (ILogger, error reporting). e.g.: `pino-logger.adapter.ts`, `log-error-reporter.adapter.ts`.
 
 ---
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1](https://github.com/EduardoJVN/PE-users-backend/compare/v1.4.0...v1.4.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* add modules ([ed0325b](https://github.com/EduardoJVN/PE-users-backend/commit/ed0325b1170620b08f67172b45d937173d5c7a45))
+* delete console log ([e6d7c5f](https://github.com/EduardoJVN/PE-users-backend/commit/e6d7c5f195175603c8f0b51b2992ffe21558d35a))
+* delete innecesario line ([7058480](https://github.com/EduardoJVN/PE-users-backend/commit/7058480be59f1c79f94fb30f35ebc0c6ad016ba1))
+* optimize claude md ([585c844](https://github.com/EduardoJVN/PE-users-backend/commit/585c844671b09c20bb1bd55fc975142ed48fff56))
+
 ## [1.4.0](https://github.com/EduardoJVN/PE-users-backend/compare/v1.3.2...v1.4.0) (2026-03-09)
 
 

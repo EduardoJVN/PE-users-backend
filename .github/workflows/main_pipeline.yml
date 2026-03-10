@@ -76,7 +76,7 @@ jobs:
             echo "env_tag=qa" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event.ref_type }}" == "tag" ]]; then
             # Extrae solo el nombre del tag (ej: v1.0.0)
-            echo "env_tag=${{ github.event.ref }}" >> $GITHUB_OUTPUT
+            echo "env_tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
       - name: 🏷️ Set Lowercase Repository Name

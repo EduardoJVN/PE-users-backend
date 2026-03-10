@@ -9,6 +9,9 @@ RUN yarn install --frozen-lockfile
 # Copiamos todo el proyecto
 COPY . .
 
+# Paso de diagnóstico: esto nos dirá si la carpeta scripts existe
+RUN ls -R ./scripts
+
 # Ahora sí, el build funcionará porque encontrará ./scripts/build.js
 RUN yarn build
 

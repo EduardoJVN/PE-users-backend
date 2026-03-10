@@ -1,7 +1,7 @@
 # --- Stage 1: Build ---
 FROM node:24-slim AS builder
 # Instalar dependencias necesarias para compilar algunos paquetes de node si fuera necesario
-RUN apk add --no-cache libc6-compat
+RUN add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json yarn.lock ./

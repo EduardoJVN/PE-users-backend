@@ -1,7 +1,6 @@
 # --- Stage 1: Build ---
 FROM node:24-slim AS builder
 # Instalar dependencias necesarias para compilar algunos paquetes de node si fuera necesario
-RUN add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json yarn.lock ./
@@ -24,4 +23,4 @@ COPY --from=builder /app/dist ./dist
 USER node
 
 EXPOSE 8080
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/app.js"]

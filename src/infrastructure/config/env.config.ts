@@ -10,7 +10,7 @@ const isTest = process.env.NODE_ENV === 'test';
 
 const EnvSchema = z.object({
   NODE_ENV: z.string().default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(8080),
   JWT_PRIVATE_KEY: isTest ? z.string().default('') : z.string().min(1),
   JWT_PUBLIC_KEY: isTest ? z.string().default('') : z.string().min(1),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),

@@ -15,9 +15,9 @@ WORKDIR /
 ENV NODE_ENV=production
 
 # Copiamos solo lo esencial
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /package.json ./
+COPY --from=builder /node_modules ./node_modules
+COPY --from=builder /dist ./dist
 
 # Usuario no-root por seguridad (Alpine lo trae por defecto)
 USER node

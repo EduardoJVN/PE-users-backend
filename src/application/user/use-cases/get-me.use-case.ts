@@ -10,7 +10,6 @@ export class GetMeUseCase {
   ) {}
 
   async execute(command: GetMeCommand): Promise<GetMeResult> {
-    console.log('user', command.userId); // Debug log to check the userId being processed
     const user = await this.repo.findById(command.userId);
 
     if (user === null) {

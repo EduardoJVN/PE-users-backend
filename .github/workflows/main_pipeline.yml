@@ -79,6 +79,12 @@ jobs:
             echo "env_tag=${{ github.event.ref }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: 🏷️ Set Lowercase Repository Name
+        id: repo_name
+        run: |
+          # Convierte 'Usuario/Repo' a 'usuario/repo' y lo guarda en los outputs del step
+          echo "lowercase=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
       - name: 🏗️ Build and Push Image
         uses: docker/build-push-action@v5
         with:
@@ -86,8 +92,8 @@ jobs:
           push: true
           # La imagen se llamará ghcr.io/tu-usuario/nombre-del-repo:tag
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.env_tag }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ steps.repo_name.outputs.lowercase }}:${{ steps.vars.outputs.env_tag }}
+            ghcr.io/${{ steps.repo_name.outputs.lowercase }}:latest
 
       - name: ✅ Summary
         run: |

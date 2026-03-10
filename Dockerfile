@@ -1,29 +1,26 @@
 # --- Stage 1: Build ---
 FROM node:24-slim AS builder
-WORKDIR /app
+# Seteamos el directorio de trabajo explícitamente
+WORKDIR /usr/src/app
 
-# Copiamos archivos de dependencias primero para cachear capas
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
-# Copiamos el resto del código (incluyendo scripts y src)
+# Copiamos todo el proyecto
 COPY . .
 
-# Ejecutamos el build
+# Ahora sí, el build funcionará porque encontrará ./scripts/build.js
 RUN yarn build
 
 # --- Stage 2: Production ---
 FROM node:24-alpine AS runner
-WORKDIR /app
+WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
-# Copiamos solo lo necesario del builder
-COPY --from=builder /app/package.json ./
-# OJO: Si usas "packages: 'external'" en esbuild, NECESITAS node_modules en producción
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /usr/src/app/package.json ./
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
 
 USER node
 EXPOSE 8080
-
 CMD ["node", "dist/app.js"]

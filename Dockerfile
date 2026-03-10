@@ -4,7 +4,10 @@ FROM node:24-slim AS builder
 WORKDIR /usr/src/app
 
 COPY package.json yarn.lock ./
+COPY prisma ./prisma/
 RUN yarn install --frozen-lockfile
+
+RUN npx prisma generate
 
 # Copiamos todo el proyecto
 COPY . .
@@ -23,6 +26,8 @@ ENV NODE_ENV=production
 COPY --from=builder /usr/src/app/package.json ./
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 USER node
 EXPOSE 8080

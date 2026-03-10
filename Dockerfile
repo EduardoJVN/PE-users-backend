@@ -1,7 +1,7 @@
 # --- Stage 1: Build ---
 FROM node:24-slim AS builder
 # Instalar dependencias necesarias para compilar algunos paquetes de node si fuera necesario
-WORKDIR /app
+WORKDIR /
 
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
@@ -11,7 +11,7 @@ RUN yarn build
 
 # --- Stage 2: Production ---
 FROM node:24-alpine AS runner
-WORKDIR /app
+WORKDIR /
 ENV NODE_ENV=production
 
 # Copiamos solo lo esencial

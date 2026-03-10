@@ -1,5 +1,5 @@
 # --- Stage 1: Build ---
-FROM node:24-alpine AS builder
+FROM node:24-slim AS builder
 # Instalar dependencias necesarias para compilar algunos paquetes de node si fuera necesario
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -23,5 +23,5 @@ COPY --from=builder /app/dist ./dist
 # Usuario no-root por seguridad (Alpine lo trae por defecto)
 USER node
 
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "dist/main.js"]

@@ -52,7 +52,8 @@ export class RegisterUserUseCase {
 
     const tokenId = uuidv7();
     const plaintextToken = randomUUID();
-    console.log('Plaintext token:', plaintextToken); // Debug log to check the generated token
+    // para poder ver el token generado de validacion para uso local
+    // console.log('Plaintext token:', plaintextToken); // Debug log to check the generated token
     const tokenHash = createHash('sha256').update(plaintextToken).digest('hex');
     const expiresAt = new Date(Date.now() + this.tokenTtlMs);
 
